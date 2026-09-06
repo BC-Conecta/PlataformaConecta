@@ -38,7 +38,9 @@ create type public.attendance_status as enum (
 create type public.holiday_type as enum (
   'FERIADO',
   'RECESSO',
+  'FERIAS',
   'PONTO_FACULTATIVO',
+  'REUNIAO_PLANEJAMENTO',
   'OUTRO'
 );
 
@@ -69,6 +71,8 @@ create table public.people (
   email text not null check (btrim(email) <> ''),
   phone text not null default '',
   active boolean not null default true,
+  profile_photo_url text,
+  portal_photo_url text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -358,16 +362,18 @@ for each row execute function public.validate_attendance_student();
 
 create table public.holidays (
   id uuid primary key default gen_random_uuid(),
-  holiday_date date not null,
+  start_date date not null,
+  end_date date not null,
   title text not null check (btrim(title) <> ''),
   type public.holiday_type not null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  constraint holidays_date_title_unique unique (holiday_date, title)
+  constraint holidays_date_order check (end_date >= start_date),
+  constraint holidays_date_title_unique unique (start_date, title)
 );
 
 create index holidays_date_idx
-  on public.holidays (holiday_date);
+  on public.holidays (start_date);
 
 -- -----------------------------------------------------------------------------
 -- Atualização automática de updated_at

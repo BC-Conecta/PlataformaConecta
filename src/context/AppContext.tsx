@@ -3,6 +3,7 @@ import type { Attendance, Fixed, Group, Holiday, Lesson, Person } from "../types
 import { loadAppData, syncAttendance, syncFixed, syncGroups, syncHolidays, syncLessons, syncPeople } from "../lib/dataService";
 import { useAuth } from "./AuthContext";
 import { dayLessons } from "../lib/domain";
+import { translateKnownAuthError } from "../lib/authErrors";
 
 type Setter<T> = React.Dispatch<React.SetStateAction<T[]>>;
 type C = {
@@ -18,9 +19,9 @@ type C = {
 const Context = createContext<C | null>(null);
 
 function getErrorMessage(reason: unknown, fallback: string): string {
-  if (reason instanceof Error) return reason.message;
+  if (reason instanceof Error) return translateKnownAuthError(reason.message) || fallback;
   if (typeof reason === "object" && reason && "message" in reason && typeof reason.message === "string") {
-    return reason.message;
+    return translateKnownAuthError(reason.message) || fallback;
   }
   return fallback;
 }

@@ -10,12 +10,14 @@ import { dayLessons, useApp } from "../context/AppContext";
 import { Page } from "../components/Page";
 import { Modal } from "../components/Modal";
 import type { Holiday, HolidayType } from "../types";
-import { addOrReplace, removeById, upsertHoliday, validateCalendarActivity, validateHoliday } from "../lib/domain";
+import { addOrReplace, holidayIncludesDate, removeById, upsertHoliday, validateCalendarActivity, validateNonInstructionalPeriod } from "../lib/domain";
 
 const holidayLabels: Record<HolidayType, string> = {
   FERIADO: "Feriado",
   RECESSO: "Recesso",
+  FERIAS: "Férias",
   PONTO_FACULTATIVO: "Ponto facultativo",
+  REUNIAO_PLANEJAMENTO: "Reunião de planejamento",
   OUTRO: "Outro",
 };
 
@@ -30,7 +32,7 @@ function monthDays(m: Date) {
 }
 
 const blankActivity = { type: "PALESTRA" as const, title: "", content: "" };
-const blankHoliday = { title: "", type: "FERIADO" as HolidayType };
+const blankHoliday = { startDate: "", endDate: "", title: "", type: "FERIADO" as HolidayType };
 
 export function CalendarPage() {
   const [savedDraft] = useState(() => {
@@ -62,13 +64,11 @@ export function CalendarPage() {
   }, [dialog, date, f, hf]);
 
   const holidayByDate = useMemo(() => {
-    const map = new Map<string, Holiday>();
-    holidays.forEach((h) => map.set(h.date, h));
-    return map;
+    return holidays;
   }, [holidays]);
 
   const sortedHolidays = useMemo(
-    () => [...holidays].sort((a, b) => a.date.localeCompare(b.date)),
+    () => [...holidays].sort((a, b) => a.startDate.localeCompare(b.startDate)),
     [holidays],
   );
   const activeGroup = groups.find((group) => group.status === "ATIVA");
@@ -81,10 +81,10 @@ export function CalendarPage() {
   }
 
   function openHoliday(iso: string) {
-    const existing = holidayByDate.get(iso);
+    const existing = holidayByDate.find((holiday) => holidayIncludesDate(holiday, iso));
     setDate(iso);
     setHf(
-      existing ? { title: existing.title, type: existing.type } : blankHoliday,
+      existing ? { startDate: existing.startDate, endDate: existing.endDate, title: existing.title, type: existing.type } : { ...blankHoliday, startDate: iso, endDate: iso },
     );
     setFormError("");
     setDialog("holiday");
@@ -103,12 +103,13 @@ export function CalendarPage() {
 
   function saveHoliday(e: FormEvent) {
     e.preventDefault();
-    const validationError = validateHoliday(date, hf.title);
+    const validationError = validateNonInstructionalPeriod(hf.type, hf.startDate, hf.endDate, hf.title);
     if (validationError) {
       setFormError(validationError);
       return;
     }
-    setHolidays((v) => upsertHoliday(v, { id: holidayByDate.get(date)?.id || crypto.randomUUID(), date, ...hf }));
+    const existing = holidayByDate.find((holiday) => holidayIncludesDate(holiday, date));
+    setHolidays((v) => upsertHoliday(v, { id: existing?.id || crypto.randomUUID(), ...hf }));
     setDialog(null);
   }
 
@@ -169,7 +170,7 @@ export function CalendarPage() {
         <div className="days">
           {monthDays(m).map((d) => {
             const iso = d.toISOString().slice(0, 10);
-            const holiday = holidayByDate.get(iso);
+            const holiday = holidayByDate.find((item) => holidayIncludesDate(item, iso));
             const today = iso === new Date().toISOString().slice(0, 10);
             return (
               <button
@@ -226,11 +227,12 @@ export function CalendarPage() {
                   {holidayLabels[h.type]}
                 </span>
                 <strong>
-                  {new Date(h.date + "T12:00").toLocaleDateString("pt-BR", {
+                  {new Date(h.startDate + "T12:00").toLocaleDateString("pt-BR", {
                     day: "2-digit",
                     month: "long",
                     year: "numeric",
                   })}
+                  {h.startDate !== h.endDate && ` a ${new Date(h.endDate + "T12:00").toLocaleDateString("pt-BR")}`}
                 </strong>
                 <span>{h.title}</span>
                 <button
@@ -315,7 +317,7 @@ export function CalendarPage() {
       {dialog === "holiday" && (
         <Modal
           title={
-            holidayByDate.has(date)
+            holidayByDate.some((holiday) => holidayIncludesDate(holiday, date))
               ? "Editar feriado / dia não letivo"
               : "Marcar feriado / dia não letivo"
           }
@@ -324,28 +326,60 @@ export function CalendarPage() {
           <form className="form" onSubmit={saveHoliday}>
             {formError && <div className="alert error">{formError}</div>}
             <label>
-              Data
-              <input
-                type="date"
-                value={date}
-                required
-                onChange={(e) => setDate(e.target.value)}
-              />
-            </label>
-            <label>
               Tipo
               <select
                 value={hf.type}
-                onChange={(e) =>
-                  setHf({ ...hf, type: e.target.value as HolidayType })
-                }
+                onChange={(e) => {
+                  const type = e.target.value as HolidayType;
+                  setHf({
+                    ...hf,
+                    type,
+                    ...(type !== "FERIAS" && type !== "RECESSO"
+                      ? { endDate: hf.startDate }
+                      : {}),
+                  });
+                }}
               >
                 <option value="FERIADO">Feriado</option>
+                <option value="FERIAS">Férias</option>
                 <option value="RECESSO">Recesso</option>
                 <option value="PONTO_FACULTATIVO">Ponto facultativo</option>
+                <option value="REUNIAO_PLANEJAMENTO">Reunião de planejamento</option>
                 <option value="OUTRO">Outro</option>
               </select>
             </label>
+            {hf.type === "FERIAS" || hf.type === "RECESSO" ? (
+              <div className="row">
+                <label>
+                  Início
+                  <input
+                    type="date"
+                    value={hf.startDate}
+                    required
+                    onChange={(e) => setHf({ ...hf, startDate: e.target.value })}
+                  />
+                </label>
+                <label>
+                  Término
+                  <input
+                    type="date"
+                    value={hf.endDate}
+                    required
+                    onChange={(e) => setHf({ ...hf, endDate: e.target.value })}
+                  />
+                </label>
+              </div>
+            ) : (
+              <label>
+                Data
+                <input
+                  type="date"
+                  value={hf.startDate}
+                  required
+                  onChange={(e) => setHf({ ...hf, startDate: e.target.value, endDate: e.target.value })}
+                />
+              </label>
+            )}
             <label>
               Título / motivo
               <input
@@ -356,13 +390,13 @@ export function CalendarPage() {
               />
             </label>
             <footer>
-              {holidayByDate.has(date) && (
+              {holidayByDate.some((holiday) => holidayIncludesDate(holiday, date)) && (
                 <>
                   <button
                     type="button"
                     className="link danger"
                     onClick={() => {
-                      const existing = holidayByDate.get(date);
+                      const existing = holidayByDate.find((holiday) => holidayIncludesDate(holiday, date));
                       if (existing) removeHoliday(existing.id);
                       setDialog(null);
                     }}

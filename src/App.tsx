@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import { Layout } from "./components/Layout";
 import { LoginPage } from "./pages/LoginPage";
+import { PasswordRecoveryPage, ResetPasswordPage } from "./pages/PasswordPages";
 import { PeoplePage } from "./pages/PeoplePage";
 import { GroupsPage } from "./pages/GroupsPage";
 import { SchedulePage } from "./pages/SchedulePage";
@@ -19,6 +20,8 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/recuperar-senha" element={<PasswordRecoveryPage />} />
+      <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
       <Route element={<Protected />}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/pessoas" element={<PeoplePage />} />

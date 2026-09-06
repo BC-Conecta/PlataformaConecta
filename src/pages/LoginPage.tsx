@@ -1,15 +1,21 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Navigate } from "react-router-dom";
-import { Eye, EyeOff, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, KeyRound, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { Link } from "react-router-dom";
 
 export function LoginPage() {
   const { user, signIn } = useAuth();
+  const [dark] = useState(() => localStorage.getItem("bc.theme") === "dark");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = dark ? "dark" : "light";
+  }, [dark]);
 
   if (user) return <Navigate to="/" replace />;
 
@@ -45,7 +51,8 @@ export function LoginPage() {
       <section className="login-panel">
         <form className="login-card" onSubmit={submit}>
           <div className="login-mark">
-            <img src="/logo-escuro.png" alt="Barracred Conecta" />
+            <img className="logo-dark" src="/logo-escuro.png" alt="Barracred Conecta" />
+            <img className="logo-light" src="/logo-branco.png" alt="Barracred Conecta" />
           </div>
           <div>
             <h2>Bem-vindo de volta</h2>
@@ -89,9 +96,10 @@ export function LoginPage() {
           <button className="primary large" disabled={loading}>
             {loading ? "Entrando..." : "Entrar"}
           </button>
-          <p className="demo-note">
-            Use o e-mail e a senha cadastrados no Supabase Auth.
-          </p>
+          <Link className="login-forgot" to="/recuperar-senha">
+            <KeyRound size={15} />
+            Esqueci minha senha
+          </Link>
         </form>
       </section>
     </div>

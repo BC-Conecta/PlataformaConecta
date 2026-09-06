@@ -7,6 +7,7 @@ import {
   validateCalendarActivity,
   validateGroupPeriod,
   validateHoliday,
+  validateNonInstructionalPeriod,
   validateRecurringActivity,
 } from "../lib/domain";
 import type { Group, Lesson } from "../types";
@@ -80,6 +81,8 @@ describe("modelo", () => {
     expect(validateCalendarActivity("2026-09-07", "Palestra")).toBeNull();
     expect(validateHoliday("", "Feriado")).toBeTruthy();
     expect(validateHoliday("2026-09-07", "Feriado")).toBeNull();
+    expect(validateNonInstructionalPeriod("FERIAS", "2026-07-01", "2026-07-15", "Férias")).toBeNull();
+    expect(validateNonInstructionalPeriod("FERIADO", "2026-09-07", "2026-09-08", "Feriado")).toBeTruthy();
   });
 
   it("limita recorrências ao período e mantém atividades pontuais", () => {

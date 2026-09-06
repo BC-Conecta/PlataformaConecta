@@ -32,21 +32,49 @@ export async function createUserAccess(person: Person): Promise<{ invited: boole
   return data as { invited: boolean };
 }
 
+export async function uploadPersonPhotos(
+  personId: string,
+  photos: { profile?: File; portal?: File },
+): Promise<Pick<Person, "profilePhotoUrl" | "portalPhotoUrl">> {
+  const uploaded: Pick<Person, "profilePhotoUrl" | "portalPhotoUrl"> = {};
+  const files = [
+    { file: photos.profile, bucket: "profile-photos", field: "profilePhotoUrl" as const },
+    { file: photos.portal, bucket: "portal-photos", field: "portalPhotoUrl" as const },
+  ];
+  for (const item of files) {
+    if (!item.file) continue;
+    const extension = item.file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const path = `${personId}/${crypto.randomUUID()}.${extension}`;
+    const { error } = await supabase.storage.from(item.bucket).upload(path, item.file, {
+      cacheControl: "3600",
+      contentType: item.file.type,
+      upsert: true,
+    });
+    if (error) throw error;
+    uploaded[item.field] = supabase.storage.from(item.bucket).getPublicUrl(path).data.publicUrl;
+  }
+  return uploaded;
+}
+
 export async function loadAppData(): Promise<AppData> {
   const [peopleResult, groupsResult, enrollmentsResult, fixedResult, lessonsResult, attendanceResult, holidaysResult] = await Promise.all([
-    supabase.from("people").select("id,name,type,email,phone,active").order("name"),
+    supabase.from("people").select("id,name,type,email,phone,active,profile_photo_url,portal_photo_url").order("name"),
     supabase.from("class_groups").select("id,name,start_date,end_date,status").order("start_date", { ascending: false }),
     supabase.from("enrollments").select("class_id,student_id"),
     supabase.from("recurring_activities").select("id,weekday,start_time,end_time,teacher_id,title,active").order("weekday").order("start_time"),
     supabase.from("lessons").select("id,lesson_date,recurring_activity_id,type,title,content,notes,teacher_id,start_time,end_time,done").order("lesson_date"),
     supabase.from("attendance").select("lesson_id,student_id,status"),
-    supabase.from("holidays").select("id,holiday_date,title,type").order("holiday_date"),
+    supabase.from("holidays").select("id,start_date,end_date,title,type").order("start_date"),
   ]);
   const result = [peopleResult, groupsResult, enrollmentsResult, fixedResult, lessonsResult, attendanceResult, holidaysResult].find((query) => query.error);
   if (result?.error) throw result.error;
   const enrollments = enrollmentsResult.data || [];
   return {
-    people: (peopleResult.data || []) as Person[],
+    people: (peopleResult.data || []).map((row) => ({
+      id: row.id, name: row.name, type: row.type, email: row.email, phone: row.phone, active: row.active,
+      profilePhotoUrl: row.profile_photo_url || undefined,
+      portalPhotoUrl: row.portal_photo_url || undefined,
+    })) as Person[],
     groups: (groupsResult.data || []).map((row) => ({
       id: row.id, name: row.name, start: row.start_date, end: row.end_date, status: row.status,
       students: enrollments.filter((item) => item.class_id === row.id).map((item) => item.student_id),
@@ -62,7 +90,7 @@ export async function loadAppData(): Promise<AppData> {
       end: row.end_time ? time(row.end_time) : undefined, done: row.done,
     })) as Lesson[],
     attendance: (attendanceResult.data || []).map((row) => ({ lessonId: row.lesson_id, studentId: row.student_id, status: row.status })) as Attendance[],
-    holidays: (holidaysResult.data || []).map((row) => ({ id: row.id, date: row.holiday_date, title: row.title, type: row.type })) as Holiday[],
+    holidays: (holidaysResult.data || []).map((row) => ({ id: row.id, startDate: row.start_date, endDate: row.end_date, title: row.title, type: row.type })) as Holiday[],
   };
 }
 
@@ -84,7 +112,7 @@ async function removeMissing(table: string, ids: string[]) {
 }
 
 export async function syncPeople(values: Person[]) {
-  await syncTable("people", values, (value) => ({ id: value.id, name: value.name, type: value.type, email: value.email, phone: value.phone, active: value.active }));
+  await syncTable("people", values, (value) => ({ id: value.id, name: value.name, type: value.type, email: value.email, phone: value.phone, active: value.active, profile_photo_url: value.profilePhotoUrl || null, portal_photo_url: value.portalPhotoUrl || null }));
   await removeMissing("people", values.map((value) => value.id));
 }
 
@@ -120,6 +148,6 @@ export async function syncAttendance(values: Attendance[]) {
 }
 
 export async function syncHolidays(values: Holiday[]) {
-  await syncTable("holidays", values, (value) => ({ id: value.id, holiday_date: value.date, title: value.title, type: value.type }));
+  await syncTable("holidays", values, (value) => ({ id: value.id, start_date: value.startDate, end_date: value.endDate, title: value.title, type: value.type }));
   await removeMissing("holidays", values.map((value) => value.id));
 }

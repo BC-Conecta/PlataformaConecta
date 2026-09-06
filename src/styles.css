@@ -1,5 +1,6 @@
 :root {
   font-family: Inter, "Segoe UI", Arial, sans-serif;
+  color-scheme: light;
   --g: #159447;
   --g2: #1fb85c;
   --gd: #087431;
@@ -23,6 +24,7 @@
   --warn-bg: #fff3dd;
 }
 :root[data-theme="dark"] {
+  color-scheme: dark;
   --bg: #141c17;
   --s: #202a23;
   --s2: #29352c;
@@ -217,6 +219,12 @@ aside {
   background: linear-gradient(135deg, var(--gs), #cdeeda);
   color: var(--gd);
   font-weight: 800;
+  overflow: hidden;
+}
+.profile > span img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .icon,
 .menu {
@@ -616,6 +624,44 @@ td small {
   gap: 9px;
   flex-wrap: wrap;
 }
+.photo-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.photo-field {
+  position: relative;
+  min-width: 0;
+}
+.photo-field > span:first-child {
+  color: var(--muted);
+}
+.photo-field img,
+.photo-placeholder {
+  display: flex;
+  width: 100%;
+  height: 116px;
+  align-items: center;
+  justify-content: center;
+  object-fit: cover;
+  border: 1px dashed var(--b);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--muted);
+}
+.photo-placeholder {
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.78rem;
+}
+.photo-placeholder svg {
+  width: 22px;
+  height: 22px;
+}
+.photo-field input[type="file"] {
+  padding: 8px;
+  font-size: 0.76rem;
+}
 .row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -656,12 +702,26 @@ textarea {
     border-color 0.15s var(--ease),
     box-shadow 0.15s var(--ease);
 }
+input[type="date"],
+input[type="time"],
+input[type="month"] {
+  color-scheme: inherit;
+}
 input:focus,
 select:focus,
 textarea:focus {
   border-color: var(--g);
   box-shadow: 0 0 0 3px #15944726;
   outline: none;
+}
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--ink);
+  -webkit-box-shadow: 0 0 0 1000px var(--s) inset;
+  box-shadow: 0 0 0 1000px var(--s) inset;
+  transition: background-color 9999s ease-out 0s;
 }
 textarea {
   min-height: 105px;
@@ -680,6 +740,10 @@ textarea {
 .alert.warning {
   background: var(--warn-bg);
   color: var(--warn);
+}
+.alert.success {
+  background: var(--gs);
+  color: var(--gd);
 }
 
 /* ---------- Modal ---------- */
@@ -905,6 +969,7 @@ textarea {
   display: grid;
   place-items: center;
   min-height: 220px;
+  height: 300px;
   text-align: center;
   border: 1px dashed var(--b);
   border-radius: var(--radius-sm);
@@ -1096,6 +1161,15 @@ textarea {
 .login-mark img {
   height: 40px;
 }
+.login-mark .logo-light {
+  display: none;
+}
+:root[data-theme="dark"] .login-mark .logo-dark {
+  display: none;
+}
+:root[data-theme="dark"] .login-mark .logo-light {
+  display: block;
+}
 .login-card h2 {
   margin: 0 0 4px;
   font-size: 1.5rem;
@@ -1108,7 +1182,7 @@ textarea {
 .input-icon {
   display: flex;
   align-items: center;
-  margin-top: 5px;
+  margin-top: 8px;
   gap: 8px;
   border: 1px solid var(--b);
   border-radius: 9px;
@@ -1144,6 +1218,20 @@ textarea {
   text-align: center;
   font-size: 0.76rem;
   color: var(--muted);
+}
+.login-forgot,
+.login-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--gd);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.login-forgot:hover,
+.login-back:hover {
+  text-decoration: underline;
 }
 
 /* ---------- Responsive ---------- */
@@ -1268,7 +1356,8 @@ textarea {
     justify-content: center;
   }
   .filters,
-  .row {
+  .row,
+  .photo-fields {
     display: grid;
     grid-template-columns: 1fr;
   }

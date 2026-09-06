@@ -75,6 +75,29 @@ export function validateHoliday(date: string, title: string): string | null {
   return null;
 }
 
+export function validateNonInstructionalPeriod(
+  type: string,
+  startDate: string,
+  endDate: string,
+  title: string,
+): string | null {
+  if (!startDate) return "Informe a data de início.";
+  if (!endDate) return "Informe a data de término.";
+  if (endDate < startDate) return "A data de término deve ser posterior à data de início.";
+  if (!title.trim()) return "Informe o motivo do dia não letivo.";
+  if ((type === "FERIAS" || type === "RECESSO") && startDate === endDate) {
+    return "Informe um período com mais de um dia para férias ou recesso.";
+  }
+  if (type !== "FERIAS" && type !== "RECESSO" && startDate !== endDate) {
+    return "Este tipo de dia não letivo deve usar uma única data.";
+  }
+  return null;
+}
+
+export function holidayIncludesDate(holiday: Holiday, date: string): boolean {
+  return date >= holiday.startDate && date <= holiday.endDate;
+}
+
 export function materializeLesson(
   lesson: Lesson,
   patch: Partial<Lesson> = {},
@@ -104,7 +127,7 @@ export function saveAttendance(
 }
 
 export function upsertHoliday(holidays: Holiday[], holiday: Holiday): Holiday[] {
-  const existing = holidays.find((item) => item.date === holiday.date);
+  const existing = holidays.find((item) => item.id === holiday.id);
   return existing ? replaceById(holidays, { ...existing, ...holiday }) : [...holidays, holiday];
 }
 
@@ -120,7 +143,7 @@ export function dayLessons(
   recurringPeriod?: { start: string; end: string },
 ): Lesson[] {
   const day = new Date(date + "T12:00").getDay();
-  const isNonInstructional = holidays.some((holiday) => holiday.date === date);
+  const isNonInstructional = holidays.some((holiday) => holidayIncludesDate(holiday, date));
   const isWithinRecurringPeriod =
     !recurringPeriod ||
     (date >= recurringPeriod.start && date <= recurringPeriod.end);

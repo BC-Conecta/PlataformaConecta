@@ -39,11 +39,14 @@ function initials(name: string) {
 
 export function Layout() {
   const { user, signOut } = useAuth();
-  const { loading, error } = useApp();
+  const { loading, error, people } = useApp();
   const navigate = useNavigate();
   const displayName =
     user?.user_metadata?.name || user?.email?.split("@")[0] || "Usuário Conecta";
   const displayRole = user?.user_metadata?.role || "";
+  const profilePhotoUrl = people.find(
+    (person) => person.email.toLowerCase() === user?.email?.toLowerCase(),
+  )?.profilePhotoUrl;
   const [collapsed, setCollapsed] = useState(
       localStorage.getItem("bc.collapse") === "1",
     ),
@@ -102,7 +105,9 @@ export function Layout() {
               {dark ? <Sun /> : <Moon />}
             </button>
             <div className="profile">
-              <span>{initials(displayName)}</span>
+              <span>
+                {profilePhotoUrl ? <img src={profilePhotoUrl} alt="" /> : initials(displayName)}
+              </span>
               <div>
                 <strong>{displayName}</strong>
                 <small>{displayRole}</small>

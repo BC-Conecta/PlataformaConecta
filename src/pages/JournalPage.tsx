@@ -3,7 +3,7 @@ import { Save } from "lucide-react";
 import { dayLessons, useApp } from "../context/AppContext";
 import { Page } from "../components/Page";
 import type { Attendance, Lesson } from "../types";
-import { materializeLesson, saveAttendance, saveLesson } from "../lib/domain";
+import { holidayIncludesDate, materializeLesson, saveAttendance, saveLesson } from "../lib/domain";
 export function JournalPage() {
   const {
       people,
@@ -17,7 +17,7 @@ export function JournalPage() {
     } = useApp(),
     [date, setDate] = useState(new Date().toISOString().slice(0, 10)),
     [index, setIndex] = useState(0),
-    holiday = holidays.find((h) => h.date === date),
+    holiday = holidays.find((item) => holidayIncludesDate(item, date)),
     activeGroup = groups.find((g) => g.status === "ATIVA"),
     items = dayLessons(date, fixed, lessons, holidays, activeGroup),
     chosen = items[index],

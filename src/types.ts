@@ -13,6 +13,8 @@ export type Person = {
   email: string;
   phone: string;
   active: boolean;
+  profilePhotoUrl?: string;
+  portalPhotoUrl?: string;
 };
 export type Group = {
   id: string;
@@ -49,10 +51,17 @@ export type Attendance = {
   studentId: string;
   status: "PRESENTE" | "AUSENTE" | "JUSTIFICADA";
 };
-export type HolidayType = "FERIADO" | "RECESSO" | "PONTO_FACULTATIVO" | "OUTRO";
+export type HolidayType =
+  | "FERIADO"
+  | "RECESSO"
+  | "FERIAS"
+  | "PONTO_FACULTATIVO"
+  | "REUNIAO_PLANEJAMENTO"
+  | "OUTRO";
 export type Holiday = {
   id: string;
-  date: string;
+  startDate: string;
+  endDate: string;
   title: string;
   type: HolidayType;
 };

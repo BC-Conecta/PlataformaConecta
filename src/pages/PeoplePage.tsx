@@ -1,18 +1,20 @@
 import { useState, type FormEvent } from "react";
-import { KeyRound, Pencil, Plus, Power } from "lucide-react";
+import { ImagePlus, KeyRound, Pencil, Plus, Power } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { Modal } from "../components/Modal";
 import { Page } from "../components/Page";
 import type { Person, Role } from "../types";
 import { addOrReplace, formatPhone, togglePersonActive } from "../lib/domain";
-import { createUserAccess } from "../lib/dataService";
+import { createUserAccess, uploadPersonPhotos } from "../lib/dataService";
 import { useModalDraft } from "../lib/modalDraft";
-const blank = {
+const blank: Omit<Person, "id"> = {
   name: "",
   type: "ALUNO" as Role,
   email: "",
   phone: "",
   active: true,
+  profilePhotoUrl: "",
+  portalPhotoUrl: "",
 };
 export function PeoplePage() {
   const { people, setPeople } = useApp(),
@@ -21,7 +23,9 @@ export function PeoplePage() {
     [statusFilter, setStatusFilter] = useState<"TODOS" | "ATIVO" | "INATIVO">("TODOS"),
     [draft, setDraft, clearDraft] = useModalDraft("bc.people.modal", blank),
     [accessLoading, setAccessLoading] = useState<string | null>(null),
-    [feedback, setFeedback] = useState("");
+    [feedback, setFeedback] = useState(""),
+    [photoFiles, setPhotoFiles] = useState<{ profile?: File; portal?: File }>({}),
+    [saving, setSaving] = useState(false);
   const edit = draft.editId ? people.find((person) => person.id === draft.editId) : draft.open ? null : undefined;
   const f = draft.value;
   const filteredPeople = people.filter((person) => {
@@ -33,9 +37,10 @@ export function PeoplePage() {
   });
   function open(p?: Person) {
     setDraft({ open: true, editId: p?.id || null, value: p || blank });
+    setPhotoFiles({});
     setFeedback("");
   }
-  function save(e: FormEvent) {
+  async function save(e: FormEvent) {
     e.preventDefault();
     const duplicated = people.some(
       (person) => person.id !== edit?.id && person.email.trim().toLowerCase() === f.email.trim().toLowerCase(),
@@ -44,8 +49,18 @@ export function PeoplePage() {
       setFeedback("Já existe uma pessoa cadastrada com este e-mail.");
       return;
     }
-    setPeople((v) => addOrReplace(v, { ...f, id: edit?.id || crypto.randomUUID() }));
-    clearDraft();
+    setSaving(true);
+    try {
+      const id = edit?.id || crypto.randomUUID();
+      const photoUrls = await uploadPersonPhotos(id, photoFiles);
+      setPeople((v) => addOrReplace(v, { ...f, ...photoUrls, id }));
+      clearDraft();
+      setPhotoFiles({});
+    } catch (error) {
+      setFeedback(error instanceof Error ? error.message : "Não foi possível salvar as fotos.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function createAccess(person: Person) {
@@ -221,6 +236,38 @@ export function PeoplePage() {
                 onChange={(e) => setDraft((current) => ({ ...current, value: { ...current.value, phone: e.target.value } }))}
               />
             </label>
+            <div className="photo-fields">
+              <label className="photo-field">
+                <span>Foto de perfil (opcional)</span>
+                {photoFiles.profile ? (
+                  <img src={URL.createObjectURL(photoFiles.profile)} alt="Pré-visualização do perfil" />
+                ) : f.profilePhotoUrl ? (
+                  <img src={f.profilePhotoUrl} alt="Foto de perfil atual" />
+                ) : (
+                  <span className="photo-placeholder"><ImagePlus /> Selecionar foto</span>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setPhotoFiles((current) => ({ ...current, profile: e.target.files?.[0] }))}
+                />
+              </label>
+              <label className="photo-field">
+                <span>Foto do portal (opcional)</span>
+                {photoFiles.portal ? (
+                  <img src={URL.createObjectURL(photoFiles.portal)} alt="Pré-visualização do portal" />
+                ) : f.portalPhotoUrl ? (
+                  <img src={f.portalPhotoUrl} alt="Foto do portal atual" />
+                ) : (
+                  <span className="photo-placeholder"><ImagePlus /> Selecionar foto</span>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setPhotoFiles((current) => ({ ...current, portal: e.target.files?.[0] }))}
+                />
+              </label>
+            </div>
             <footer>
               <button
                 type="button"
@@ -229,7 +276,9 @@ export function PeoplePage() {
               >
                 Cancelar
               </button>
-              <button className="primary">Salvar</button>
+              <button className="primary" disabled={saving}>
+                {saving ? "Salvando..." : "Salvar"}
+              </button>
             </footer>
           </form>
         </Modal>

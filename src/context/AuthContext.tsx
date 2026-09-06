@@ -10,6 +10,7 @@ import type {
   User,
 } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
+import { getAuthErrorMessage } from '../lib/authErrors'
 
 interface AuthContextValue {
   user: User | null
@@ -19,6 +20,8 @@ interface AuthContextValue {
     email: string,
     password: string
   ) => Promise<void>
+  requestPasswordReset: (email: string) => Promise<void>
+  updatePassword: (password: string) => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -43,6 +46,11 @@ export function AuthProvider({
 
       if (error) {
         console.error('Erro ao recuperar sessão:', error)
+        void supabase.auth.signOut({ scope: 'local' })
+        setSession(null)
+        setUser(null)
+        setLoading(false)
+        return
       }
 
       setSession(data.session)
@@ -77,7 +85,25 @@ export function AuthProvider({
       })
 
     if (error) {
-      throw error
+      throw new Error(getAuthErrorMessage(error))
+    }
+  }
+
+  async function requestPasswordReset(email: string): Promise<void> {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/redefinir-senha`,
+    })
+
+    if (error) {
+      throw new Error(getAuthErrorMessage(error))
+    }
+  }
+
+  async function updatePassword(password: string): Promise<void> {
+    const { error } = await supabase.auth.updateUser({ password })
+
+    if (error) {
+      throw new Error(getAuthErrorMessage(error))
     }
   }
 
@@ -96,6 +122,8 @@ export function AuthProvider({
         session,
         loading,
         signIn,
+        requestPasswordReset,
+        updatePassword,
         signOut,
       }}
     >
