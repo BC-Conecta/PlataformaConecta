@@ -1,63 +1,117 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
-import type { Role, UserProfile } from "../types";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from 'react'
+import type {
+  Session,
+  User,
+} from '@supabase/supabase-js'
+import { supabase } from '../lib/supabase'
 
-type AuthValue = {
-  user: UserProfile | null;
-  login: (email: string, password: string, role?: Role) => Promise<void>;
-  logout: () => void;
-};
-
-const Context = createContext<AuthValue | null>(null);
-
-function load(): UserProfile | null {
-  try {
-    return JSON.parse(sessionStorage.getItem("bc.user") || "null");
-  } catch {
-    return null;
-  }
+interface AuthContextValue {
+  user: User | null
+  session: Session | null
+  loading: boolean
+  signIn: (
+    email: string,
+    password: string
+  ) => Promise<void>
+  signOut: () => Promise<void>
 }
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<UserProfile | null>(load);
+const AuthContext = createContext<AuthContextValue | undefined>(
+  undefined
+)
 
-  async function login(
-    email: string,
-    password: string,
-    role: Role = "ADMINISTRADOR",
-  ) {
-    if (!email || password.length < 4) {
-      throw new Error("Informe e-mail e senha com pelo menos 4 caracteres.");
+export function AuthProvider({
+  children,
+}: {
+  children: ReactNode
+}) {
+  const [user, setUser] = useState<User | null>(null)
+  const [session, setSession] = useState<Session | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let ativo = true
+
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (!ativo) return
+
+      if (error) {
+        console.error('Erro ao recuperar sessão:', error)
+      }
+
+      setSession(data.session)
+      setUser(data.session?.user ?? null)
+      setLoading(false)
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(
+      (_event, currentSession) => {
+        setSession(currentSession)
+        setUser(currentSession?.user ?? null)
+        setLoading(false)
+      }
+    )
+
+    return () => {
+      ativo = false
+      subscription.unsubscribe()
     }
-    // Modo demonstração: não há backend de autenticação configurado.
-    // Qualquer credencial válida entra com o perfil escolhido.
-    await new Promise((r) => setTimeout(r, 350));
-    const profile: UserProfile = {
-      id: "demo-" + role.toLowerCase(),
-      name:
-        role === "ADMINISTRADOR"
-          ? "Administrador Conecta"
-          : email.split("@")[0].replace(/\W/g, " ").trim() || "Usuário",
-      email,
-      role,
-    };
-    setUser(profile);
-    sessionStorage.setItem("bc.user", JSON.stringify(profile));
+  }, [])
+
+  async function signIn(
+    email: string,
+    password: string
+  ): Promise<void> {
+    const { error } =
+      await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+    if (error) {
+      throw error
+    }
   }
 
-  function logout() {
-    setUser(null);
-    sessionStorage.removeItem("bc.user");
+  async function signOut(): Promise<void> {
+    const { error } = await supabase.auth.signOut()
+
+    if (error) {
+      throw error
+    }
   }
 
   return (
-    <Context.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        loading,
+        signIn,
+        signOut,
+      }}
+    >
       {children}
-    </Context.Provider>
-  );
+    </AuthContext.Provider>
+  )
 }
 
-export function useAuth() {
-  const c = useContext(Context);
-  if (!c) throw new Error("useAuth precisa estar dentro de AuthProvider");
-  return c;
+export function useAuth(): AuthContextValue {
+  const context = useContext(AuthContext)
+
+  if (!context) {
+    throw new Error(
+      'useAuth deve ser usado dentro de AuthProvider.'
+    )
+  }
+
+  return context
 }

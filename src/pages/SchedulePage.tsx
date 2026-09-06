@@ -4,6 +4,8 @@ import { useApp } from "../context/AppContext";
 import { Page } from "../components/Page";
 import { Modal } from "../components/Modal";
 import type { Fixed } from "../types";
+import { addOrReplace, removeById, toggleFixedActive, validateRecurringActivity } from "../lib/domain";
+import { useModalDraft } from "../lib/modalDraft";
 const days = [
   "Domingo",
   "Segunda-feira",
@@ -22,17 +24,23 @@ const blank = {
 };
 export function SchedulePage() {
   const { fixed, setFixed, people } = useApp(),
-    teachers = people.filter((p) => p.type === "PROFESSOR" && p.active),
-    [edit, setEdit] = useState<Fixed | null | undefined>(),
-    [f, setF] = useState(blank);
+    teachers = people.filter(
+      (p) =>
+        ["PROFESSOR", "GESTOR", "ADMINISTRADOR"].includes(p.type) && p.active,
+    ),
+    [draft, setDraft, clearDraft] = useModalDraft("bc.schedule.modal", blank),
+    [formError, setFormError] = useState("");
+  const edit = draft.editId ? fixed.find((item) => item.id === draft.editId) : draft.open ? null : undefined;
+  const f = draft.value;
   function save(e: FormEvent) {
     e.preventDefault();
-    setFixed((v) =>
-      edit
-        ? v.map((x) => (x.id === edit.id ? { ...edit, ...f } : x))
-        : [...v, { ...f, id: crypto.randomUUID() }],
-    );
-    setEdit(undefined);
+    const validationError = validateRecurringActivity(f.title, f.start, f.end, f.teacherId);
+    if (validationError) {
+      setFormError(validationError);
+      return;
+    }
+    setFixed((v) => addOrReplace(v, { ...f, id: edit?.id || crypto.randomUUID() }));
+    clearDraft();
   }
   return (
     <Page
@@ -43,8 +51,8 @@ export function SchedulePage() {
         <button
           className="primary"
           onClick={() => {
-            setEdit(null);
-            setF({ ...blank, teacherId: teachers[0]?.id || "" });
+            setDraft({ open: true, editId: null, value: { ...blank, teacherId: teachers[0]?.id || "" } });
+            setFormError("");
           }}
         >
           <Plus />
@@ -59,7 +67,7 @@ export function SchedulePage() {
               <th>Dia</th>
               <th>Horário</th>
               <th>Atividade</th>
-              <th>Professor</th>
+              <th>Responsável</th>
               <th>Status</th>
               <th>Ações</th>
             </tr>
@@ -74,7 +82,7 @@ export function SchedulePage() {
                 <td data-label="Atividade">
                   <strong>{x.title}</strong>
                 </td>
-                <td data-label="Professor">
+                <td data-label="Responsável">
                   {people.find((p) => p.id === x.teacherId)?.name}
                 </td>
                 <td data-label="Status">{x.active ? "Ativa" : "Inativa"}</td>
@@ -82,8 +90,8 @@ export function SchedulePage() {
                   <button
                     className="icon"
                     onClick={() => {
-                      setEdit(x);
-                      setF(x);
+                      setDraft({ open: true, editId: x.id, value: x });
+                      setFormError("");
                     }}
                   >
                     <Pencil />
@@ -91,11 +99,7 @@ export function SchedulePage() {
                   <button
                     className="icon"
                     onClick={() =>
-                      setFixed((v) =>
-                        v.map((a) =>
-                          a.id === x.id ? { ...a, active: !a.active } : a,
-                        ),
-                      )
+                      setFixed((v) => toggleFixedActive(v, x.id))
                     }
                   >
                     <Power />
@@ -103,7 +107,7 @@ export function SchedulePage() {
                   <button
                     className="icon danger"
                     onClick={() =>
-                      setFixed((v) => v.filter((a) => a.id !== x.id))
+                      setFixed((v) => removeById(v, x.id))
                     }
                   >
                     <Trash2 />
@@ -114,18 +118,19 @@ export function SchedulePage() {
           </tbody>
         </table>
       </section>
-      {edit !== undefined && (
+      {draft.open && (
         <Modal
           title={edit ? "Editar aula recorrente" : "Nova aula recorrente"}
-          onClose={() => setEdit(undefined)}
+          onClose={clearDraft}
         >
           <form className="form" onSubmit={save}>
+            {formError && <div className="alert error">{formError}</div>}
             <label>
               Dia
               <select
                 value={f.weekday}
                 onChange={(e) =>
-                  setF({ ...f, weekday: Number(e.target.value) })
+                  setDraft((current) => ({ ...current, value: { ...current.value, weekday: Number(e.target.value) } }))
                 }
               >
                 {days.slice(1).map((d, i) => (
@@ -141,7 +146,8 @@ export function SchedulePage() {
                 <input
                   type="time"
                   value={f.start}
-                  onChange={(e) => setF({ ...f, start: e.target.value })}
+                  required
+                  onChange={(e) => setDraft((current) => ({ ...current, value: { ...current.value, start: e.target.value } }))}
                 />
               </label>
               <label>
@@ -149,7 +155,8 @@ export function SchedulePage() {
                 <input
                   type="time"
                   value={f.end}
-                  onChange={(e) => setF({ ...f, end: e.target.value })}
+                  required
+                  onChange={(e) => setDraft((current) => ({ ...current, value: { ...current.value, end: e.target.value } }))}
                 />
               </label>
             </div>
@@ -157,14 +164,16 @@ export function SchedulePage() {
               Atividade
               <input
                 value={f.title}
-                onChange={(e) => setF({ ...f, title: e.target.value })}
+                required
+                onChange={(e) => setDraft((current) => ({ ...current, value: { ...current.value, title: e.target.value } }))}
               />
             </label>
             <label>
-              Professor
+              Responsável pela aula
               <select
                 value={f.teacherId}
-                onChange={(e) => setF({ ...f, teacherId: e.target.value })}
+                required
+                onChange={(e) => setDraft((current) => ({ ...current, value: { ...current.value, teacherId: e.target.value } }))}
               >
                 {teachers.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -177,7 +186,7 @@ export function SchedulePage() {
               <button
                 type="button"
                 className="secondary"
-                onClick={() => setEdit(undefined)}
+                onClick={clearDraft}
               >
                 Cancelar
               </button>

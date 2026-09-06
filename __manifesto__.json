@@ -1,0 +1,162 @@
+{
+    "format":  "PLATAFORMA_CONECTA_TRANSFER_V2",
+    "createdUtc":  "2026-09-03T13:45:21.3850033Z",
+    "fileCount":  31,
+    "files":  [
+                  {
+                      "path":  ".gitignore",
+                      "size":  36,
+                      "sha256":  "dab45bb8ea66038c7da352fcd514a41339cf7d860aba47b02dc93eb38eb95a79"
+                  },
+                  {
+                      "path":  "index.html",
+                      "size":  304,
+                      "sha256":  "cd8ff5a15b17c19b90bb1b93beded05307801bad87ee0e4d323f9ce0af3803d7"
+                  },
+                  {
+                      "path":  "package.json",
+                      "size":  760,
+                      "sha256":  "d1df713dbd85c909901a15cc246ed19e80a41b96ff1c1415e35448634cc6c572"
+                  },
+                  {
+                      "path":  "package-lock.json",
+                      "size":  125756,
+                      "sha256":  "a84bcc2769e62772c6358169ca3e423a11a19bffc177131a360078d658830632"
+                  },
+                  {
+                      "path":  "public/logo-branco.png",
+                      "size":  23923,
+                      "sha256":  "94c90e8beab096535f1fb3cad576d609ec47ec613dc6ccc061c047d1ded48aa7"
+                  },
+                  {
+                      "path":  "public/logo-escuro.png",
+                      "size":  46628,
+                      "sha256":  "828fae2994eadcfbe3065a22c9237c293683cbece746cbdeb88138ebb8ec2195"
+                  },
+                  {
+                      "path":  "README.md",
+                      "size":  19,
+                      "sha256":  "d975d10638263795f3cacc1a9fbb0b2e3c6b3a17c842cfe87d4d72df9c4035eb"
+                  },
+                  {
+                      "path":  "src/App.tsx",
+                      "size":  1493,
+                      "sha256":  "a0723c9ce4caaef87c70f51afec705a221bc01fc8bb9622d11c95aae3d52ce25"
+                  },
+                  {
+                      "path":  "src/components/Layout.tsx",
+                      "size":  3899,
+                      "sha256":  "8aeafd989ecf673f0ddf6bf8bbeaf2a92e17a61964e7fd611b17cfe9380a4762"
+                  },
+                  {
+                      "path":  "src/components/Modal.tsx",
+                      "size":  519,
+                      "sha256":  "4ac8107e7b21f1fc23932e6277110f6e49fa97a20f825e5605774f482ba2a000"
+                  },
+                  {
+                      "path":  "src/components/Page.tsx",
+                      "size":  452,
+                      "sha256":  "ae6d59c6205b53de71ae541222d6f8a97487b199fa58d6dc309fc1c94b51ca83"
+                  },
+                  {
+                      "path":  "src/context/AppContext.tsx",
+                      "size":  5486,
+                      "sha256":  "44ca0d7f104d58049783b4632f8394271693aff08a8fb72d8430f86d27516652"
+                  },
+                  {
+                      "path":  "src/context/AuthContext.tsx",
+                      "size":  1742,
+                      "sha256":  "d99e25058e724610eb4b6fa90fe28bb20332bf09eb461258b4eac73841d3e94c"
+                  },
+                  {
+                      "path":  "src/main.tsx",
+                      "size":  522,
+                      "sha256":  "46fd3496f7b8bdaff42f536f324f53158f06ec10d7e6ba037fe750ea8f503f30"
+                  },
+                  {
+                      "path":  "src/pages/CalendarPage.tsx",
+                      "size":  11101,
+                      "sha256":  "723656e4b7f31da808d99043747b45061891ad2916d1b5dfa2386ef792068d67"
+                  },
+                  {
+                      "path":  "src/pages/GroupsPage.tsx",
+                      "size":  4475,
+                      "sha256":  "bcc982e26c4e43898a9712ffd265394b203b51ce746d15e92ac15db6b627f1ae"
+                  },
+                  {
+                      "path":  "src/pages/JournalPage.tsx",
+                      "size":  5302,
+                      "sha256":  "a34d5f6a00c3571b958253ebe0fa91f143816ca70b5d446b57a5751673a106d2"
+                  },
+                  {
+                      "path":  "src/pages/LoginPage.tsx",
+                      "size":  3948,
+                      "sha256":  "26a4afab53651b7c5a10339512e1e70b22c24fa99c06ee667648f7cdc5796f09"
+                  },
+                  {
+                      "path":  "src/pages/OtherPages.tsx",
+                      "size":  2331,
+                      "sha256":  "fcb2b442c19793312f64f904579d06161a19b6c2ec8acbc70b92a8f68b8d2de1"
+                  },
+                  {
+                      "path":  "src/pages/PeoplePage.tsx",
+                      "size":  4483,
+                      "sha256":  "51c7f93f55161b4a5ffa4633011f4e69700b0c458ff3dda71c20d2f8f4abec46"
+                  },
+                  {
+                      "path":  "src/pages/ReportsPage.tsx",
+                      "size":  5444,
+                      "sha256":  "96322b411fe0e2ce3b26be1f0b2f8b4b0bd8f88fde849ce8e0bab008e75aacaa"
+                  },
+                  {
+                      "path":  "src/pages/SchedulePage.tsx",
+                      "size":  5660,
+                      "sha256":  "04df4fa753959ad2328ef865595fc9ac4ce1f5f68078ecd14b9dfbb3c73d16d1"
+                  },
+                  {
+                      "path":  "src/styles.css",
+                      "size":  21362,
+                      "sha256":  "c58de10a5acc18535aed3d165452f3b34f74cbb1b9c2b93c13cde93d68d656f1"
+                  },
+                  {
+                      "path":  "src/test/model.test.ts",
+                      "size":  624,
+                      "sha256":  "a40b95b1dcc39d43267ea8ab5eb3f805b126cc1413d135686f07f317c4d63f8e"
+                  },
+                  {
+                      "path":  "src/test/setup.ts",
+                      "size":  36,
+                      "sha256":  "90ec9100c29e008c3d9194acd818e2cfa6dc6e177154bc8e10c5959aa35619ed"
+                  },
+                  {
+                      "path":  "src/types.ts",
+                      "size":  1162,
+                      "sha256":  "282f25af624a4481f775d1e9492aa88e4a09896a84f7d1c76b1b2d21aebda92c"
+                  },
+                  {
+                      "path":  "supabase/schema.sql",
+                      "size":  1151,
+                      "sha256":  "6450213978b520a010eb7f53a3898419874bc757d3b1b9d51fc9bd578b4e3579"
+                  },
+                  {
+                      "path":  "tsconfig.app.json",
+                      "size":  319,
+                      "sha256":  "551a335648e4275fd559a3b54646de73e2830fa9e0a60da8a6e22fab66a0da6d"
+                  },
+                  {
+                      "path":  "tsconfig.json",
+                      "size":  119,
+                      "sha256":  "770b4140bbb581e2dfd9ea9946ffc9c75a1d86ba7d2db5f77c83e37cbdf9d808"
+                  },
+                  {
+                      "path":  "tsconfig.node.json",
+                      "size":  215,
+                      "sha256":  "ee63610cbc7ed6f414eec652585239a556a51dff0b5a11ec3e208d4dac225988"
+                  },
+                  {
+                      "path":  "vite.config.ts",
+                      "size":  555,
+                      "sha256":  "bef93bc072949a50ce2c49b9b3c975f55728699f5d55256f83d91eb21a967ceb"
+                  }
+              ]
+}

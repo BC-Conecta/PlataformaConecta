@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   CalendarOff,
   ChevronLeft,
@@ -10,6 +10,7 @@ import { dayLessons, useApp } from "../context/AppContext";
 import { Page } from "../components/Page";
 import { Modal } from "../components/Modal";
 import type { Holiday, HolidayType } from "../types";
+import { addOrReplace, removeById, upsertHoliday, validateCalendarActivity, validateHoliday } from "../lib/domain";
 
 const holidayLabels: Record<HolidayType, string> = {
   FERIADO: "Feriado",
@@ -32,12 +33,33 @@ const blankActivity = { type: "PALESTRA" as const, title: "", content: "" };
 const blankHoliday = { title: "", type: "FERIADO" as HolidayType };
 
 export function CalendarPage() {
-  const { fixed, lessons, setLessons, holidays, setHolidays } = useApp(),
+  const [savedDraft] = useState(() => {
+    try {
+      return JSON.parse(sessionStorage.getItem("bc.calendar.modal") || "null") as {
+        dialog: "activity" | "holiday" | null;
+        date: string;
+        f: typeof blankActivity;
+        hf: typeof blankHoliday;
+      } | null;
+    } catch {
+      return null;
+    }
+  });
+  const { fixed, lessons, setLessons, holidays, setHolidays, groups } = useApp(),
     [m, setM] = useState(new Date()),
-    [dialog, setDialog] = useState<"activity" | "holiday" | null>(null),
-    [date, setDate] = useState(""),
-    [f, setF] = useState(blankActivity),
-    [hf, setHf] = useState(blankHoliday);
+    [dialog, setDialog] = useState<"activity" | "holiday" | null>(savedDraft?.dialog || null),
+    [date, setDate] = useState(savedDraft?.date || ""),
+    [f, setF] = useState(savedDraft?.f || blankActivity),
+    [hf, setHf] = useState(savedDraft?.hf || blankHoliday),
+    [formError, setFormError] = useState("");
+
+  useEffect(() => {
+    if (dialog) {
+      sessionStorage.setItem("bc.calendar.modal", JSON.stringify({ dialog, date, f, hf }));
+    } else {
+      sessionStorage.removeItem("bc.calendar.modal");
+    }
+  }, [dialog, date, f, hf]);
 
   const holidayByDate = useMemo(() => {
     const map = new Map<string, Holiday>();
@@ -49,10 +71,12 @@ export function CalendarPage() {
     () => [...holidays].sort((a, b) => a.date.localeCompare(b.date)),
     [holidays],
   );
+  const activeGroup = groups.find((group) => group.status === "ATIVA");
 
   function openActivity(iso: string) {
     setDate(iso);
     setF(blankActivity);
+    setFormError("");
     setDialog("activity");
   }
 
@@ -62,32 +86,34 @@ export function CalendarPage() {
     setHf(
       existing ? { title: existing.title, type: existing.type } : blankHoliday,
     );
+    setFormError("");
     setDialog("holiday");
   }
 
   function saveActivity(e: FormEvent) {
     e.preventDefault();
-    setLessons((v) => [
-      ...v,
-      { ...f, id: crypto.randomUUID(), date, notes: "", done: false },
-    ]);
+    const validationError = validateCalendarActivity(date, f.title);
+    if (validationError) {
+      setFormError(validationError);
+      return;
+    }
+    setLessons((v) => addOrReplace(v, { ...f, id: crypto.randomUUID(), date, notes: "", done: false }));
     setDialog(null);
   }
 
   function saveHoliday(e: FormEvent) {
     e.preventDefault();
-    if (!hf.title.trim()) return;
-    setHolidays((v) => {
-      const existing = v.find((h) => h.date === date);
-      return existing
-        ? v.map((h) => (h.date === date ? { ...h, ...hf } : h))
-        : [...v, { id: crypto.randomUUID(), date, ...hf }];
-    });
+    const validationError = validateHoliday(date, hf.title);
+    if (validationError) {
+      setFormError(validationError);
+      return;
+    }
+    setHolidays((v) => upsertHoliday(v, { id: holidayByDate.get(date)?.id || crypto.randomUUID(), date, ...hf }));
     setDialog(null);
   }
 
   function removeHoliday(id: string) {
-    setHolidays((v) => v.filter((h) => h.id !== id));
+    setHolidays((v) => removeById(v, id));
   }
 
   return (
@@ -170,8 +196,7 @@ export function CalendarPage() {
                     {holiday.title}
                   </span>
                 )}
-                {!holiday &&
-                  dayLessons(iso, fixed, lessons, holidays).map((x) => (
+                {dayLessons(iso, fixed, lessons, holidays, activeGroup).map((x) => (
                     <span
                       key={x.id}
                       className={`event ${x.type.toLowerCase()}`}
@@ -226,11 +251,13 @@ export function CalendarPage() {
       {dialog === "activity" && (
         <Modal title="Nova atividade pontual" onClose={() => setDialog(null)}>
           <form className="form" onSubmit={saveActivity}>
+            {formError && <div className="alert error">{formError}</div>}
             <label>
               Data
               <input
                 type="date"
                 value={date}
+                required
                 onChange={(e) => setDate(e.target.value)}
               />
             </label>
@@ -252,6 +279,7 @@ export function CalendarPage() {
               Título
               <input
                 value={f.title}
+                required
                 onChange={(e) => setF({ ...f, title: e.target.value })}
               />
             </label>
@@ -294,11 +322,13 @@ export function CalendarPage() {
           onClose={() => setDialog(null)}
         >
           <form className="form" onSubmit={saveHoliday}>
+            {formError && <div className="alert error">{formError}</div>}
             <label>
               Data
               <input
                 type="date"
                 value={date}
+                required
                 onChange={(e) => setDate(e.target.value)}
               />
             </label>

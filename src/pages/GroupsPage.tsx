@@ -4,6 +4,8 @@ import { useApp } from "../context/AppContext";
 import { Modal } from "../components/Modal";
 import { Page } from "../components/Page";
 import type { Group } from "../types";
+import { saveGroup, validateGroupPeriod } from "../lib/domain";
+import { useModalDraft } from "../lib/modalDraft";
 const blank: Omit<Group, "id"> = {
   name: "",
   start: "",
@@ -13,19 +15,19 @@ const blank: Omit<Group, "id"> = {
 };
 export function GroupsPage() {
   const { groups, setGroups, people } = useApp(),
-    [edit, setEdit] = useState<Group | null | undefined>(),
-    [f, setF] = useState<Omit<Group, "id">>(blank);
+    [draft, setDraft, clearDraft] = useModalDraft("bc.groups.modal", blank),
+    [formError, setFormError] = useState("");
+  const edit = draft.editId ? groups.find((group) => group.id === draft.editId) : draft.open ? null : undefined;
+  const f = draft.value;
   function save(e: FormEvent) {
     e.preventDefault();
-    setGroups((v) =>
-      edit
-        ? v.map((x) => (x.id === edit.id ? { ...edit, ...f } : x))
-        : [
-            ...v.map((x) => ({ ...x, status: "CONCLUIDA" as const })),
-            { ...f, id: crypto.randomUUID() },
-          ],
-    );
-    setEdit(undefined);
+    const periodError = validateGroupPeriod(f.start, f.end);
+    if (periodError) {
+      setFormError(periodError);
+      return;
+    }
+    setGroups((v) => saveGroup(v, { ...f, id: edit?.id || crypto.randomUUID() }, !edit));
+    clearDraft();
   }
   return (
     <Page
@@ -36,8 +38,8 @@ export function GroupsPage() {
         <button
           className="primary"
           onClick={() => {
-            setEdit(null);
-            setF(blank);
+            setDraft({ open: true, editId: null, value: blank });
+            setFormError("");
           }}
         >
           <Plus />
@@ -52,11 +54,13 @@ export function GroupsPage() {
             className={`group-card ${g.status.toLowerCase()}`}
           >
             <div className="cover">
-              <GraduationCap />
+              <div className="cover-title">
+                <GraduationCap />
+                <h2>{g.name}</h2>
+              </div>
               <span>{g.status}</span>
             </div>
             <div className="group-body">
-              <h2>{g.name}</h2>
               <p>
                 {new Date(g.start + "T12:00").toLocaleDateString("pt-BR")} a{" "}
                 {new Date(g.end + "T12:00").toLocaleDateString("pt-BR")}
@@ -67,8 +71,8 @@ export function GroupsPage() {
               <button
                 className="secondary"
                 onClick={() => {
-                  setEdit(g);
-                  setF(g);
+                  setDraft({ open: true, editId: g.id, value: g });
+                  setFormError("");
                 }}
               >
                 <Pencil />
@@ -78,27 +82,29 @@ export function GroupsPage() {
           </article>
         ))}
       </div>
-      {edit !== undefined && (
+      {draft.open && (
         <Modal
           title={edit ? "Editar turma" : "Nova turma"}
-          onClose={() => setEdit(undefined)}
+          onClose={clearDraft}
         >
           <form className="form" onSubmit={save}>
             <label>
               Nome
               <input
                 value={f.name}
-                onChange={(e) => setF({ ...f, name: e.target.value })}
+                onChange={(e) => setDraft((current) => ({ ...current, value: { ...current.value, name: e.target.value } }))}
                 required
               />
             </label>
+            {formError && <div className="alert error">{formError}</div>}
             <div className="row">
               <label>
                 Início
                 <input
                   type="date"
                   value={f.start}
-                  onChange={(e) => setF({ ...f, start: e.target.value })}
+                  required
+                  onChange={(e) => setDraft((current) => ({ ...current, value: { ...current.value, start: e.target.value } }))}
                 />
               </label>
               <label>
@@ -106,7 +112,8 @@ export function GroupsPage() {
                 <input
                   type="date"
                   value={f.end}
-                  onChange={(e) => setF({ ...f, end: e.target.value })}
+                  required
+                  onChange={(e) => setDraft((current) => ({ ...current, value: { ...current.value, end: e.target.value } }))}
                 />
               </label>
             </div>
@@ -120,12 +127,12 @@ export function GroupsPage() {
                       type="checkbox"
                       checked={f.students.includes(p.id)}
                       onChange={(e) =>
-                        setF({
-                          ...f,
+                        setDraft((current) => ({ ...current, value: {
+                          ...current.value,
                           students: e.target.checked
                             ? [...f.students, p.id]
                             : f.students.filter((x) => x !== p.id),
-                        })
+                        }}))
                       }
                     />
                     {p.name}
@@ -136,7 +143,7 @@ export function GroupsPage() {
               <button
                 type="button"
                 className="secondary"
-                onClick={() => setEdit(undefined)}
+                onClick={clearDraft}
               >
                 Cancelar
               </button>

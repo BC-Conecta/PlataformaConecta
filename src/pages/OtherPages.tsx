@@ -78,7 +78,7 @@ export function SettingsPage() {
     <Page tag="SISTEMA" title="Configurações" text="Barracred Conecta v0.1.5">
       <section className="card">
         <h2>Supabase</h2>
-        <span className="pill">Modo demonstração</span>
+        <span className="pill">Conectado à base online</span>
       </section>
     </Page>
   );

@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useApp } from "../context/AppContext";
 import {
   BarChart3,
   BookOpenCheck,
   CalendarDays,
+  CalendarCog,
   ChevronLeft,
   ClipboardCheck,
   FlaskConical,
@@ -23,7 +25,7 @@ const nav = [
   ["/", "Visão geral", BarChart3],
   ["/pessoas", "Pessoas", Users],
   ["/turmas", "Turmas", GraduationCap],
-  ["/aulas", "Configuração das aulas", CalendarDays],
+  ["/aulas", "Configuração das aulas", CalendarCog],
   ["/calendario", "Calendário", CalendarDays],
   ["/diario", "Diário de classe", ClipboardCheck],
   ["/relatorios", "Relatórios", BookOpenCheck],
@@ -36,8 +38,12 @@ function initials(name: string) {
 }
 
 export function Layout() {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
+  const { loading, error } = useApp();
   const navigate = useNavigate();
+  const displayName =
+    user?.user_metadata?.name || user?.email?.split("@")[0] || "Usuário Conecta";
+  const displayRole = user?.user_metadata?.role || "";
   const [collapsed, setCollapsed] = useState(
       localStorage.getItem("bc.collapse") === "1",
     ),
@@ -96,17 +102,17 @@ export function Layout() {
               {dark ? <Sun /> : <Moon />}
             </button>
             <div className="profile">
-              <span>{initials(user?.name || "Usuário Conecta")}</span>
+              <span>{initials(displayName)}</span>
               <div>
-                <strong>{user?.name || "Usuário Conecta"}</strong>
-                <small>{user?.role || ""}</small>
+                <strong>{displayName}</strong>
+                <small>{displayRole}</small>
               </div>
             </div>
             <button
               className="icon"
               title="Sair"
               onClick={() => {
-                logout();
+                void signOut();
                 navigate("/login", { replace: true });
               }}
             >
@@ -115,7 +121,14 @@ export function Layout() {
           </div>
         </header>
         <main>
-          <Outlet />
+          {loading ? (
+            <div className="empty">Carregando dados da plataforma...</div>
+          ) : (
+            <>
+              {error && <div className="alert error data-error">{error}</div>}
+              <Outlet />
+            </>
+          )}
         </main>
       </section>
     </div>

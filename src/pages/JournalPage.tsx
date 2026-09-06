@@ -3,6 +3,7 @@ import { Save } from "lucide-react";
 import { dayLessons, useApp } from "../context/AppContext";
 import { Page } from "../components/Page";
 import type { Attendance, Lesson } from "../types";
+import { materializeLesson, saveAttendance, saveLesson } from "../lib/domain";
 export function JournalPage() {
   const {
       people,
@@ -17,34 +18,22 @@ export function JournalPage() {
     [date, setDate] = useState(new Date().toISOString().slice(0, 10)),
     [index, setIndex] = useState(0),
     holiday = holidays.find((h) => h.date === date),
-    items = dayLessons(date, fixed, lessons, holidays),
+    activeGroup = groups.find((g) => g.status === "ATIVA"),
+    items = dayLessons(date, fixed, lessons, holidays, activeGroup),
     chosen = items[index],
     students = people.filter((p) =>
       groups.find((g) => g.status === "ATIVA")?.students.includes(p.id),
     );
   function materialize(patch: Partial<Lesson> = {}) {
     if (!chosen) return undefined;
-    const real = {
-      ...chosen,
-      ...patch,
-      id: chosen.id.startsWith("virtual:") ? crypto.randomUUID() : chosen.id,
-    };
-    setLessons((v) =>
-      chosen.id.startsWith("virtual:")
-        ? [...v, real]
-        : v.map((x) => (x.id === chosen.id ? real : x)),
-    );
+    const real = materializeLesson(chosen, patch);
+    setLessons((v) => saveLesson(v, real));
     return real;
   }
   function mark(studentId: string, status: Attendance["status"]) {
     const real = materialize();
     if (!real) return;
-    setAttendance((v) => [
-      ...v.filter(
-        (x) => !(x.lessonId === real.id && x.studentId === studentId),
-      ),
-      { lessonId: real.id, studentId, status },
-    ]);
+    setAttendance((v) => saveAttendance(v, { lessonId: real.id, studentId, status }));
   }
   return (
     <Page

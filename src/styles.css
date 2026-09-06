@@ -454,6 +454,36 @@ table {
   width: 100%;
   border-collapse: collapse;
 }
+.people-table {
+  table-layout: fixed;
+}
+.people-table .people-name-column {
+  width: 34%;
+}
+.people-table .people-profile-column {
+  width: 17%;
+}
+.people-table .people-contact-column {
+  width: 20%;
+}
+.people-table .people-status-column {
+  width: 13%;
+}
+.people-table .people-actions-column {
+  width: 16%;
+}
+.people-table td:first-child strong,
+.people-table td:first-child small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.people-table td:nth-child(2),
+.people-table td:nth-child(3),
+.people-table td:nth-child(4),
+.people-table td.actions {
+  white-space: nowrap;
+}
 th,
 td {
   text-align: left;
@@ -515,12 +545,14 @@ td small {
   box-shadow: var(--shadow-lg);
 }
 .cover {
-  height: 118px;
+  min-height: 78px;
   background: linear-gradient(135deg, #0e7137, #24a654);
-  padding: 20px;
+  padding: 14px 18px;
   color: #fff;
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
 }
 .concluida .cover {
   background: linear-gradient(135deg, #52615a, #718078);
@@ -528,6 +560,22 @@ td small {
 .cover svg {
   width: 42px;
   height: 42px;
+  flex: 0 0 auto;
+}
+.cover-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.cover-title h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.12rem;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .cover span {
   font-weight: 800;
@@ -896,9 +944,42 @@ textarea {
   border-color: #946300;
 }
 .filters {
-  display: flex;
-  gap: 14px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(220px, 1.6fr) repeat(2, minmax(170px, 1fr));
+  gap: 12px;
+  padding: 14px;
+  margin: -4px -4px 18px;
+  border: 1px solid var(--b);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+}
+.filters label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.filters input,
+.filters select {
+  margin: 0;
+  min-height: 42px;
+  padding: 10px 12px;
+  background: var(--s);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: none;
+}
+.filters input::placeholder {
+  color: var(--muted);
+}
+.filters input:focus,
+.filters select:focus {
+  border-color: var(--g);
+  box-shadow: 0 0 0 3px #15944726;
 }
 .chart {
   min-height: 350px;
@@ -1027,6 +1108,7 @@ textarea {
 .input-icon {
   display: flex;
   align-items: center;
+  margin-top: 5px;
   gap: 8px;
   border: 1px solid var(--b);
   border-radius: 9px;

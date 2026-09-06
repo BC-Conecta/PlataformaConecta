@@ -2,21 +2,11 @@ import { useState, type FormEvent } from "react";
 import { Navigate } from "react-router-dom";
 import { Eye, EyeOff, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import type { Role } from "../types";
-
-const roles: Role[] = [
-  "ADMINISTRADOR",
-  "GESTOR",
-  "PROFESSOR",
-  "ALUNO",
-  "RESPONSAVEL",
-];
 
 export function LoginPage() {
-  const { user, login } = useAuth();
-  const [email, setEmail] = useState("admin@barracred.org.br");
-  const [password, setPassword] = useState("conecta123");
-  const [role, setRole] = useState<Role>("ADMINISTRADOR");
+  const { user, signIn } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,7 +18,7 @@ export function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      await login(email, password, role);
+      await signIn(email, password);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Não foi possível entrar.");
     } finally {
@@ -95,26 +85,12 @@ export function LoginPage() {
               </button>
             </div>
           </label>
-          <label>
-            Perfil de demonstração
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value as Role)}
-            >
-              {roles.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
-            </select>
-          </label>
           {error && <div className="alert error">{error}</div>}
           <button className="primary large" disabled={loading}>
             {loading ? "Entrando..." : "Entrar"}
           </button>
           <p className="demo-note">
-            Modo demonstração ativo. Use os dados preenchidos ou qualquer e-mail
-            com senha de pelo menos 4 caracteres.
+            Use o e-mail e a senha cadastrados no Supabase Auth.
           </p>
         </form>
       </section>
