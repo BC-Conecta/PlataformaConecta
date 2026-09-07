@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { dayLessons } from "../context/AppContext";
 import {
+  birthdaysForMonth,
   calculateAge,
   formatBirthDate,
   materializeLesson,
@@ -23,6 +24,15 @@ describe("modelo", () => {
     expect(calculateAge("2000-09-08", new Date("2026-09-07T12:00:00"))).toBe(25);
     expect(formatBirthDate(null)).toBe("Não informado");
     expect(formatBirthDate("2000-09-07")).toBe("07/09/2000");
+  });
+  it("seleciona e ordena aniversariantes ativos do mês", () => {
+    const people = [
+      { id: "1", name: "Zélia", type: "ALUNO" as const, email: "", phone: "", birthDate: "2000-09-20", active: true },
+      { id: "2", name: "Ana", type: "ALUNO" as const, email: "", phone: "", birthDate: "2001-09-05", active: true },
+      { id: "3", name: "Bruno", type: "ALUNO" as const, email: "", phone: "", birthDate: "2002-09-10", active: false },
+      { id: "4", name: "Caio", type: "ALUNO" as const, email: "", phone: "", birthDate: "2003-10-01", active: true },
+    ];
+    expect(birthdaysForMonth(people, "2026-09").map((person) => person.name)).toEqual(["Ana", "Zélia"]);
   });
   it("gera aula recorrente", () =>
     expect(

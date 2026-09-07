@@ -425,33 +425,101 @@ main {
 .stats article {
   background: var(--s);
   border: 1px solid var(--b);
-  border-radius: var(--radius);
-  padding: 22px;
-  display: flex;
-  flex-direction: column;
+  border-radius: 16px;
+  overflow: hidden;
   box-shadow: var(--shadow);
   transition:
     transform 0.2s var(--ease),
     box-shadow 0.2s var(--ease);
-  position: relative;
-  overflow: hidden;
-}
-.stats article::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--g), var(--g2));
 }
 .stats article:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow-lg);
 }
+.stats-cover {
+  min-height: 66px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #0e7137, #24a654);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.stats article:nth-child(2) .stats-cover {
+  background: linear-gradient(135deg, #0f6370, #1f9a9a);
+}
+.stats article:nth-child(3) .stats-cover {
+  background: linear-gradient(135deg, #b45c16, #dd8a2a);
+}
+.stats article:nth-child(4) .stats-cover {
+  background: linear-gradient(135deg, #5b478d, #8066b8);
+}
+.stats-cover svg {
+  width: 30px;
+  height: 30px;
+}
+.stats-cover span {
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+.stats-body {
+  padding: 18px;
+  display: grid;
+  gap: 4px;
+}
 .stats strong {
   font-size: 1.45rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .stats span {
+  font-size: 1rem;
   color: var(--muted);
+}
+.stats-cover span {
+  color: #fff;
+}
+.birthdays-card {
+  padding: 0;
+  overflow: hidden;
+  margin-top: 20px;
+}
+.section-head {
+  padding: 20px 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 18px;
+  border-bottom: 1px solid var(--b);
+}
+.section-head b {
+  color: var(--g);
+  font-size: 0.68rem;
+}
+.section-head h2,
+.section-head p {
+  margin: 4px 0 0;
+}
+.section-head p {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.month-picker {
+  min-width: 150px;
+}
+.birthday-table table {
+  margin: 25px 0;
+  min-width: 500px;
+}
+.birthday-table {
+  padding: 0 22px;
+}
+.empty-state {
+  text-align: center;
+  color: var(--muted);
+  padding: 28px;
 }
 
 /* ---------- Tables ---------- */
@@ -1303,6 +1371,19 @@ textarea {
   }
 }
 @media (max-width: 700px) {
+  .section-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .month-picker {
+    width: 100%;
+  }
+  .birthday-table table {
+    min-width: 0;
+  }
+  .birthday-table {
+    padding: 0 12px 12px;
+  }
   .table table,
   .table thead,
   .table tbody,

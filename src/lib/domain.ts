@@ -33,6 +33,17 @@ export function formatBirthDate(birthDate: string | null): string {
   return `${day}/${month}/${year}`;
 }
 
+export function birthdaysForMonth(people: Person[], month: string): Person[] {
+  const monthNumber = month.split("-")[1];
+  return people
+    .filter((person) => person.active && person.birthDate?.split("-")[1] === monthNumber)
+    .sort((first, second) => {
+      const firstDay = Number(first.birthDate?.split("-")[2]);
+      const secondDay = Number(second.birthDate?.split("-")[2]);
+      return firstDay - secondDay || first.name.localeCompare(second.name, "pt-BR");
+    });
+}
+
 export function calculateAge(birthDate: string | null, today = new Date()): number | null {
   if (!birthDate) return null;
   const [year, month, day] = birthDate.split("-").map(Number);
