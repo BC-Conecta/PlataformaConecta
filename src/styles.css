@@ -1284,6 +1284,10 @@ textarea {
 .input-icon input:focus {
   box-shadow: none;
 }
+.input-icon input[type="password"]::-ms-reveal,
+.input-icon input[type="password"]::-ms-clear {
+  display: none;
+}
 .input-icon button {
   background: none;
   border: 0;

@@ -89,6 +89,7 @@ export function SchedulePage() {
                 <td className="actions" data-label="Ações">
                   <button
                     className="icon"
+                    title="Editar aula recorrente"
                     onClick={() => {
                       setDraft({ open: true, editId: x.id, value: x });
                       setFormError("");
@@ -98,6 +99,7 @@ export function SchedulePage() {
                   </button>
                   <button
                     className="icon"
+                    title="Ativar ou inativar aula recorrente"
                     onClick={() =>
                       setFixed((v) => toggleFixedActive(v, x.id))
                     }
@@ -106,6 +108,7 @@ export function SchedulePage() {
                   </button>
                   <button
                     className="icon danger"
+                    title="Remover aula recorrente"
                     onClick={() =>
                       setFixed((v) => removeById(v, x.id))
                     }

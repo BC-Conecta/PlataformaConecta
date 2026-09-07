@@ -145,6 +145,7 @@ export function CalendarPage() {
         <div className="cal-head">
           <button
             className="icon"
+            title="Mês anterior"
             onClick={() => setM(new Date(m.getFullYear(), m.getMonth() - 1))}
           >
             <ChevronLeft />
@@ -154,6 +155,7 @@ export function CalendarPage() {
           </h2>
           <button
             className="icon"
+            title="Próximo mês"
             onClick={() => setM(new Date(m.getFullYear(), m.getMonth() + 1))}
           >
             <ChevronRight />

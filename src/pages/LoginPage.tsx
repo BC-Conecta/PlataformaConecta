@@ -85,6 +85,7 @@ export function LoginPage() {
               <button
                 type="button"
                 className="ghost"
+                title={show ? "Ocultar senha" : "Mostrar senha"}
                 onClick={() => setShow((v) => !v)}
                 aria-label={show ? "Ocultar senha" : "Mostrar senha"}
               >

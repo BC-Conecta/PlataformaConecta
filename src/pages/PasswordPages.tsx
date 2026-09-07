@@ -123,7 +123,7 @@ export function ResetPasswordPage() {
           <div className="input-icon">
             <LockKeyhole size={18} />
             <input type={show ? "text" : "password"} value={password} autoComplete="new-password" onChange={(event) => setPassword(event.target.value)} required />
-            <button type="button" className="ghost" onClick={() => setShow((value) => !value)} aria-label={show ? "Ocultar senha" : "Mostrar senha"}>
+            <button type="button" className="ghost" title={show ? "Ocultar senha" : "Mostrar senha"} onClick={() => setShow((value) => !value)} aria-label={show ? "Ocultar senha" : "Mostrar senha"}>
               {show ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>

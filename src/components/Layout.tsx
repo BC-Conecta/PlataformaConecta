@@ -65,7 +65,7 @@ export function Layout() {
       <aside className={open ? "open" : ""}>
         <div className="brand">
           <img src="/logo-branco.png" />
-          <button onClick={() => setOpen(false)}>
+          <button title="Fechar menu" onClick={() => setOpen(false)}>
             <X />
           </button>
         </div>
@@ -84,7 +84,7 @@ export function Layout() {
       </aside>
       <section className="work">
         <header>
-          <button className="menu" onClick={() => setOpen(true)}>
+          <button className="menu" title="Abrir menu" onClick={() => setOpen(true)}>
             <Menu />
           </button>
           <div className="product">
@@ -93,15 +93,15 @@ export function Layout() {
           </div>
           <div className="tools">
             <div className="font">
-              <button onClick={() => setFont(Math.max(90, font - 10))}>
+              <button title="Diminuir tamanho do texto" onClick={() => setFont(Math.max(90, font - 10))}>
                 <Minus />
               </button>
               <b>{font}%</b>
-              <button onClick={() => setFont(Math.min(130, font + 10))}>
+              <button title="Aumentar tamanho do texto" onClick={() => setFont(Math.min(130, font + 10))}>
                 <Plus />
               </button>
             </div>
-            <button className="icon" onClick={() => setDark(!dark)}>
+            <button className="icon" title={dark ? "Usar tema claro" : "Usar tema escuro"} onClick={() => setDark(!dark)}>
               {dark ? <Sun /> : <Moon />}
             </button>
             <div className="profile">

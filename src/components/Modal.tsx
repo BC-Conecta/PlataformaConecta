@@ -14,7 +14,7 @@ export function Modal({
       <section className="modal" role="dialog" aria-modal="true">
         <header>
           <h2>{title}</h2>
-          <button className="icon" onClick={onClose}>
+          <button className="icon" title="Fechar" onClick={onClose}>
             <X />
           </button>
         </header>
