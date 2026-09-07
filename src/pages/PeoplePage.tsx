@@ -4,7 +4,7 @@ import { useApp } from "../context/AppContext";
 import { Modal } from "../components/Modal";
 import { Page } from "../components/Page";
 import type { Person, Role } from "../types";
-import { addOrReplace, formatPhone, togglePersonActive } from "../lib/domain";
+import { addOrReplace, calculateAge, formatBirthDate, formatPhone, togglePersonActive } from "../lib/domain";
 import { createUserAccess, uploadPersonPhotos } from "../lib/dataService";
 import { useModalDraft } from "../lib/modalDraft";
 const blank: Omit<Person, "id"> = {
@@ -12,6 +12,7 @@ const blank: Omit<Person, "id"> = {
   type: "ALUNO" as Role,
   email: "",
   phone: "",
+  birthDate: null,
   active: true,
   profilePhotoUrl: "",
   portalPhotoUrl: "",
@@ -129,6 +130,7 @@ export function PeoplePage() {
           <colgroup>
             <col className="people-name-column" />
             <col className="people-profile-column" />
+            <col className="people-birth-date-column" />
             <col className="people-contact-column" />
             <col className="people-status-column" />
             <col className="people-actions-column" />
@@ -137,6 +139,7 @@ export function PeoplePage() {
             <tr>
               <th>Nome</th>
               <th>Perfil</th>
+              <th>Nascimento</th>
               <th>Contato</th>
               <th>Status</th>
               <th>Ações</th>
@@ -151,6 +154,10 @@ export function PeoplePage() {
                 </td>
                 <td data-label="Perfil">
                   <span className="pill">{p.type}</span>
+                </td>
+                <td data-label="Nascimento">
+                  <span>{formatBirthDate(p.birthDate || null)}</span>
+                  {calculateAge(p.birthDate || null) !== null && <small>{calculateAge(p.birthDate || null)} anos</small>}
                 </td>
                 <td data-label="Contato">{formatPhone(p.phone)}</td>
                 <td data-label="Status">{p.active ? "Ativo" : "Inativo"}</td>
@@ -197,7 +204,7 @@ export function PeoplePage() {
           title={edit ? "Editar pessoa" : "Nova pessoa"}
           onClose={clearDraft}
         >
-          <form className="form" onSubmit={save}>
+          <form className="form person-form" onSubmit={save}>
             {feedback && <div className="alert error">{feedback}</div>}
             <label>
               Nome
@@ -207,6 +214,32 @@ export function PeoplePage() {
                 required
               />
             </label>
+            <label>
+              E-mail
+              <input
+                type="email"
+                value={f.email}
+                required
+                onChange={(e) => setDraft((current) => ({ ...current, value: { ...current.value, email: e.target.value } }))}
+              />
+            </label>
+            <div className="person-contact-row">
+              <label>
+                Telefone
+                <input
+                  value={f.phone}
+                  onChange={(e) => setDraft((current) => ({ ...current, value: { ...current.value, phone: e.target.value } }))}
+                />
+              </label>
+              <label>
+                Data de nascimento (opcional)
+                <input
+                  type="date"
+                  value={f.birthDate || ""}
+                  onChange={(e) => setDraft((current) => ({ ...current, value: { ...current.value, birthDate: e.target.value || null } }))}
+                />
+              </label>
+            </div>
             <label>
               Perfil
               <select
@@ -219,22 +252,6 @@ export function PeoplePage() {
                 <option value="RESPONSAVEL">RESPONSAVEL</option>
                 <option value="GESTOR">GESTOR</option>
               </select>
-            </label>
-            <label>
-              E-mail
-              <input
-                type="email"
-                value={f.email}
-                required
-                onChange={(e) => setDraft((current) => ({ ...current, value: { ...current.value, email: e.target.value } }))}
-              />
-            </label>
-            <label>
-              Telefone
-              <input
-                value={f.phone}
-                onChange={(e) => setDraft((current) => ({ ...current, value: { ...current.value, phone: e.target.value } }))}
-              />
             </label>
             <div className="photo-fields">
               <label className="photo-field">

@@ -27,6 +27,23 @@ export function formatPhone(phone: string): string {
   return phone;
 }
 
+export function formatBirthDate(birthDate: string | null): string {
+  if (!birthDate) return "Não informado";
+  const [year, month, day] = birthDate.split("-");
+  return `${day}/${month}/${year}`;
+}
+
+export function calculateAge(birthDate: string | null, today = new Date()): number | null {
+  if (!birthDate) return null;
+  const [year, month, day] = birthDate.split("-").map(Number);
+  let age = today.getFullYear() - year;
+  const birthdayHasNotHappened =
+    today.getMonth() + 1 < month ||
+    (today.getMonth() + 1 === month && today.getDate() < day);
+  if (birthdayHasNotHappened) age -= 1;
+  return age;
+}
+
 export function toggleFixedActive(fixed: Fixed[], fixedId: string): Fixed[] {
   return fixed.map((item) =>
     item.id === fixedId ? { ...item, active: !item.active } : item,

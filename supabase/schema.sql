@@ -70,6 +70,7 @@ create table public.people (
   type public.app_role not null,
   email text not null check (btrim(email) <> ''),
   phone text not null default '',
+  birth_date date,
   active boolean not null default true,
   profile_photo_url text,
   portal_photo_url text,

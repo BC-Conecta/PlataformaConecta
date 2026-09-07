@@ -58,7 +58,7 @@ export async function uploadPersonPhotos(
 
 export async function loadAppData(): Promise<AppData> {
   const [peopleResult, groupsResult, enrollmentsResult, fixedResult, lessonsResult, attendanceResult, holidaysResult] = await Promise.all([
-    supabase.from("people").select("id,name,type,email,phone,active,profile_photo_url,portal_photo_url").order("name"),
+    supabase.from("people").select("id,name,type,email,phone,birth_date,active,profile_photo_url,portal_photo_url").order("name"),
     supabase.from("class_groups").select("id,name,start_date,end_date,status").order("start_date", { ascending: false }),
     supabase.from("enrollments").select("class_id,student_id"),
     supabase.from("recurring_activities").select("id,weekday,start_time,end_time,teacher_id,title,active").order("weekday").order("start_time"),
@@ -71,7 +71,8 @@ export async function loadAppData(): Promise<AppData> {
   const enrollments = enrollmentsResult.data || [];
   return {
     people: (peopleResult.data || []).map((row) => ({
-      id: row.id, name: row.name, type: row.type, email: row.email, phone: row.phone, active: row.active,
+      id: row.id, name: row.name, type: row.type, email: row.email, phone: row.phone,
+      birthDate: typeof row.birth_date === "string" ? row.birth_date : null, active: row.active,
       profilePhotoUrl: row.profile_photo_url || undefined,
       portalPhotoUrl: row.portal_photo_url || undefined,
     })) as Person[],
@@ -112,7 +113,7 @@ async function removeMissing(table: string, ids: string[]) {
 }
 
 export async function syncPeople(values: Person[]) {
-  await syncTable("people", values, (value) => ({ id: value.id, name: value.name, type: value.type, email: value.email, phone: value.phone, active: value.active, profile_photo_url: value.profilePhotoUrl || null, portal_photo_url: value.portalPhotoUrl || null }));
+  await syncTable("people", values, (value) => ({ id: value.id, name: value.name, type: value.type, email: value.email, phone: value.phone, birth_date: value.birthDate || null, active: value.active, profile_photo_url: value.profilePhotoUrl || null, portal_photo_url: value.portalPhotoUrl || null }));
   await removeMissing("people", values.map((value) => value.id));
 }
 

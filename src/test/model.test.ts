@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { dayLessons } from "../context/AppContext";
 import {
+  calculateAge,
+  formatBirthDate,
   materializeLesson,
   saveAttendance,
   saveGroup,
@@ -15,6 +17,12 @@ describe("modelo", () => {
   it("jsdom oferece localStorage", () => {
     localStorage.setItem("x", "ok");
     expect(localStorage.getItem("x")).toBe("ok");
+  });
+  it("calcula idade e formata data de nascimento", () => {
+    expect(calculateAge("2000-09-07", new Date("2026-09-07T12:00:00"))).toBe(26);
+    expect(calculateAge("2000-09-08", new Date("2026-09-07T12:00:00"))).toBe(25);
+    expect(formatBirthDate(null)).toBe("Não informado");
+    expect(formatBirthDate("2000-09-07")).toBe("07/09/2000");
   });
   it("gera aula recorrente", () =>
     expect(

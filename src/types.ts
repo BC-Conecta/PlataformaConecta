@@ -12,6 +12,7 @@ export type Person = {
   type: Role;
   email: string;
   phone: string;
+  birthDate: string | null;
   active: boolean;
   profilePhotoUrl?: string;
   portalPhotoUrl?: string;

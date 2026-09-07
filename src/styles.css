@@ -471,14 +471,17 @@ table {
 .people-table .people-profile-column {
   width: 17%;
 }
+.people-table .people-birth-date-column {
+  width: 16%;
+}
 .people-table .people-contact-column {
-  width: 20%;
+  width: 15%;
 }
 .people-table .people-status-column {
-  width: 13%;
+  width: 10%;
 }
 .people-table .people-actions-column {
-  width: 16%;
+  width: 15%;
 }
 .people-table td:first-child strong,
 .people-table td:first-child small {
@@ -489,6 +492,7 @@ table {
 .people-table td:nth-child(2),
 .people-table td:nth-child(3),
 .people-table td:nth-child(4),
+.people-table td:nth-child(5),
 .people-table td.actions {
   white-space: nowrap;
 }
@@ -610,6 +614,11 @@ td small {
 .form {
   display: grid;
   gap: 14px;
+}
+.person-contact-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 .form label {
   display: grid;
@@ -1357,7 +1366,8 @@ textarea {
   }
   .filters,
   .row,
-  .photo-fields {
+  .photo-fields,
+  .person-contact-row {
     display: grid;
     grid-template-columns: 1fr;
   }
