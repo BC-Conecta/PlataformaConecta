@@ -7,9 +7,10 @@ import {
   Trash2,
 } from "lucide-react";
 import { dayLessons, useApp } from "../context/AppContext";
+import { useAuth } from "../context/AuthContext";
 import { Page } from "../components/Page";
 import { Modal } from "../components/Modal";
-import type { Holiday, HolidayType } from "../types";
+import type { Holiday, HolidayType, Lesson } from "../types";
 import { addOrReplace, holidayIncludesDate, removeById, upsertHoliday, validateCalendarActivity, validateNonInstructionalPeriod } from "../lib/domain";
 
 const holidayLabels: Record<HolidayType, string> = {
@@ -31,7 +32,12 @@ function monthDays(m: Date) {
   });
 }
 
-const blankActivity = { type: "PALESTRA" as const, title: "", content: "" };
+type ActivityForm = {
+  type: Exclude<Lesson["type"], "AULA">;
+  title: string;
+  content: string;
+};
+const blankActivity: ActivityForm = { type: "PALESTRA", title: "", content: "" };
 const blankHoliday = { startDate: "", endDate: "", title: "", type: "FERIADO" as HolidayType };
 
 export function CalendarPage() {
@@ -47,12 +53,14 @@ export function CalendarPage() {
       return null;
     }
   });
-  const { fixed, lessons, setLessons, holidays, setHolidays, groups } = useApp(),
+  const { fixed, lessons, setLessons, holidays, setHolidays, groups, people } = useApp(),
+    { user } = useAuth(),
     [m, setM] = useState(new Date()),
     [dialog, setDialog] = useState<"activity" | "holiday" | null>(savedDraft?.dialog || null),
     [date, setDate] = useState(savedDraft?.date || ""),
     [f, setF] = useState(savedDraft?.f || blankActivity),
     [hf, setHf] = useState(savedDraft?.hf || blankHoliday),
+    [activityId, setActivityId] = useState<string | null>(null),
     [formError, setFormError] = useState("");
 
   useEffect(() => {
@@ -72,10 +80,17 @@ export function CalendarPage() {
     [holidays],
   );
   const activeGroup = groups.find((group) => group.status === "ATIVA");
+  const canManageHolidays = people.some(
+    (person) =>
+      person.active &&
+      person.email.trim().toLowerCase() === user?.email?.trim().toLowerCase() &&
+      (person.type === "ADMINISTRADOR" || person.type === "GESTOR"),
+  );
 
-  function openActivity(iso: string) {
+  function openActivity(iso: string, activity?: Lesson) {
     setDate(iso);
-    setF(blankActivity);
+    setActivityId(activity?.id || null);
+    setF(activity ? { type: activity.type === "AULA" ? "PALESTRA" : activity.type, title: activity.title, content: activity.content } : blankActivity);
     setFormError("");
     setDialog("activity");
   }
@@ -97,7 +112,13 @@ export function CalendarPage() {
       setFormError(validationError);
       return;
     }
-    setLessons((v) => addOrReplace(v, { ...f, id: crypto.randomUUID(), date, notes: "", done: false }));
+    setLessons((v) => addOrReplace(v, { ...f, id: activityId || crypto.randomUUID(), date, notes: "", done: false }));
+    setDialog(null);
+  }
+
+  function removeActivity() {
+    if (!activityId) return;
+    setLessons((v) => removeById(v, activityId));
     setDialog(null);
   }
 
@@ -203,6 +224,10 @@ export function CalendarPage() {
                     <span
                       key={x.id}
                       className={`event ${x.type.toLowerCase()}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!x.fixedId) openActivity(iso, x);
+                      }}
                     >
                       <small>{x.start}</small>
                       {x.title}
@@ -237,13 +262,15 @@ export function CalendarPage() {
                   {h.startDate !== h.endDate && ` a ${new Date(h.endDate + "T12:00").toLocaleDateString("pt-BR")}`}
                 </strong>
                 <span>{h.title}</span>
-                <button
-                  className="icon danger"
-                  title="Remover"
-                  onClick={() => removeHoliday(h.id)}
-                >
-                  <Trash2 size={16} />
-                </button>
+                {canManageHolidays && (
+                  <button
+                    className="icon danger holiday-remove"
+                    title="Remover"
+                    onClick={() => removeHoliday(h.id)}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
               </li>
             ))}
           </ul>
@@ -253,7 +280,7 @@ export function CalendarPage() {
       </section>
 
       {dialog === "activity" && (
-        <Modal title="Nova atividade pontual" onClose={() => setDialog(null)}>
+        <Modal title={activityId ? "Editar atividade pontual" : "Nova atividade pontual"} onClose={() => setDialog(null)}>
           <form className="form" onSubmit={saveActivity}>
             {formError && <div className="alert error">{formError}</div>}
             <label>
@@ -310,6 +337,11 @@ export function CalendarPage() {
               >
                 Cancelar
               </button>
+              {activityId && (
+                <button type="button" className="danger" onClick={removeActivity}>
+                  Excluir
+                </button>
+              )}
               <button className="primary">Salvar</button>
             </footer>
           </form>

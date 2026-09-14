@@ -25,6 +25,7 @@ export function PeoplePage() {
     [draft, setDraft, clearDraft] = useModalDraft("bc.people.modal", blank),
     [accessLoading, setAccessLoading] = useState<string | null>(null),
     [feedback, setFeedback] = useState(""),
+    [feedbackType, setFeedbackType] = useState<"error" | "success">("error"),
     [photoFiles, setPhotoFiles] = useState<{ profile?: File; portal?: File }>({}),
     [saving, setSaving] = useState(false);
   const edit = draft.editId ? people.find((person) => person.id === draft.editId) : draft.open ? null : undefined;
@@ -40,6 +41,7 @@ export function PeoplePage() {
     setDraft({ open: true, editId: p?.id || null, value: p || blank });
     setPhotoFiles({});
     setFeedback("");
+    setFeedbackType("error");
   }
   async function save(e: FormEvent) {
     e.preventDefault();
@@ -47,6 +49,7 @@ export function PeoplePage() {
       (person) => person.id !== edit?.id && person.email.trim().toLowerCase() === f.email.trim().toLowerCase(),
     );
     if (f.email && duplicated) {
+      setFeedbackType("error");
       setFeedback("Já existe uma pessoa cadastrada com este e-mail.");
       return;
     }
@@ -58,6 +61,7 @@ export function PeoplePage() {
       clearDraft();
       setPhotoFiles({});
     } catch (error) {
+      setFeedbackType("error");
       setFeedback(error instanceof Error ? error.message : "Não foi possível salvar as fotos.");
     } finally {
       setSaving(false);
@@ -66,11 +70,14 @@ export function PeoplePage() {
 
   async function createAccess(person: Person) {
     setFeedback("");
+    setFeedbackType("error");
     setAccessLoading(person.id);
     try {
       const result = await createUserAccess(person);
+      setFeedbackType("success");
       setFeedback(result.invited ? `Convite enviado para ${person.email}.` : `Acesso vinculado a ${person.name}.`);
     } catch (error) {
+      setFeedbackType("error");
       setFeedback(error instanceof Error ? error.message : "Não foi possível criar o acesso.");
     } finally {
       setAccessLoading(null);
@@ -89,7 +96,7 @@ export function PeoplePage() {
       }
     >
       <section className="card table">
-        {feedback && <div className="alert error">{feedback}</div>}
+        {feedback && <div className={`alert ${feedbackType}`}>{feedback}</div>}
         <div className="filters">
           <label>
             Pesquisar por nome

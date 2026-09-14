@@ -65,7 +65,7 @@ export function Layout() {
       <aside className={open ? "open" : ""}>
         <div className="brand">
           <img src="/logo-branco.png" />
-          <button title="Fechar menu" onClick={() => setOpen(false)}>
+          <button title="Fechar menu" onClick={() => { setOpen(false); setCollapsed(false); }}>
             <X />
           </button>
         </div>
@@ -77,7 +77,17 @@ export function Layout() {
             </NavLink>
           ))}
         </nav>
-        <button className="collapse" onClick={() => setCollapsed(!collapsed)}>
+        <button
+          className="collapse"
+          onClick={() => {
+            if (open) {
+              setOpen(false);
+              setCollapsed(false);
+              return;
+            }
+            setCollapsed(!collapsed);
+          }}
+        >
           <ChevronLeft />
           <span>Recolher menu</span>
         </button>

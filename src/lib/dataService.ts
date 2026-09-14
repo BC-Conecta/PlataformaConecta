@@ -13,7 +13,7 @@ export type AppData = {
 const time = (value: string | null) => value?.slice(0, 5) || "";
 
 export async function createUserAccess(person: Person): Promise<{ invited: boolean }> {
-  const { data, error } = await supabase.functions.invoke("create-user", {
+  const { data, error } = await supabase.functions.invoke("create-user-access", {
     body: {
       personId: person.id,
       name: person.name,
@@ -24,8 +24,17 @@ export async function createUserAccess(person: Person): Promise<{ invited: boole
   if (error) {
     const context = "context" in error ? error.context : undefined;
     if (context instanceof Response) {
-      const body = await context.json().catch(() => null) as { error?: string } | null;
-      if (body?.error) throw new Error(body.error);
+      const body = await context.json().catch(() => null) as {
+        error?: string;
+        diagnostic?: { authEmail?: string; profileRole?: string | null; matchedPerson?: boolean };
+      } | null;
+      if (body?.error) {
+        const diagnostic = body.diagnostic;
+        const details = diagnostic
+          ? ` [auth=${diagnostic.authEmail || "?"}; role=${diagnostic.profileRole || "?"}; pessoa=${diagnostic.matchedPerson ? "sim" : "não"}]`
+          : "";
+        throw new Error(`${body.error}${details}`);
+      }
     }
     throw new Error(error.message || "Não foi possível criar o acesso.");
   }

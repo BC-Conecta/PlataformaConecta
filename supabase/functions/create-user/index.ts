@@ -32,12 +32,61 @@ Deno.serve(async (request) => {
     const admin = createClient(supabaseUrl, serviceRoleKey);
     const { data: requester, error: requesterError } = await admin
       .from("user_profiles")
-      .select("role")
+      .select("role,email,person_id")
       .eq("id", authData.user.id)
-      .eq("active", true)
       .maybeSingle();
-    if (requesterError || !requester || !["ADMINISTRADOR", "GESTOR"].includes(requester.role)) {
-      return json({ error: "Apenas gestores podem criar acessos." }, 403);
+    let requesterRole = String(requester?.role || "").toUpperCase();
+    const requesterQueryError = requesterError?.message || null;
+    const requesterEmails = [...new Set([
+      authData.user.email,
+      requester?.email,
+    ].filter(Boolean).map((email) => String(email).trim().toLowerCase()))];
+    let requesterPerson: { id: string; type: "ADMINISTRADOR" | "GESTOR" } | null = null;
+    let requesterPersonQueryError: string | null = null;
+    for (const requesterEmail of requesterEmails) {
+      const { data, error } = await admin
+        .from("people")
+        .select("id,type,active")
+        .eq("active", true)
+        .ilike("email", requesterEmail)
+        .in("type", ["ADMINISTRADOR", "GESTOR"])
+        .maybeSingle();
+      requesterPersonQueryError = error?.message || requesterPersonQueryError;
+      if (data) {
+        requesterPerson = data as { id: string; type: "ADMINISTRADOR" | "GESTOR" };
+        break;
+      }
+    }
+    if (requesterPerson) {
+      requesterRole = requesterPerson.type;
+      if (requester?.role !== requesterPerson.type || requester?.person_id !== requesterPerson.id) {
+        await admin
+          .from("user_profiles")
+          .update({ role: requesterPerson.type, person_id: requesterPerson.id, active: true })
+          .eq("id", authData.user.id);
+      }
+    }
+    console.log("create-user authorization", {
+      project: supabaseUrl,
+      authUserId: authData.user.id,
+      authEmail: authData.user.email,
+      profileRole: requester?.role,
+      matchedPersonId: requesterPerson?.id,
+      matchedPersonType: requesterPerson?.type,
+          requesterQueryError,
+          requesterPersonQueryError,
+    });
+    if (!requesterPerson && !["ADMINISTRADOR", "GESTOR"].includes(requesterRole)) {
+      return json({
+        error: "Apenas administradores ou gestores podem criar acessos.",
+        diagnostic: {
+          authEmail: authData.user.email,
+          profileRole: requester?.role || null,
+          matchedPerson: Boolean(requesterPerson),
+          requesterQueryError,
+          requesterPersonQueryError,
+        },
+      }, 403);
     }
 
     const body = await request.json();

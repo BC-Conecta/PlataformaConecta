@@ -549,7 +549,7 @@ table {
   width: 10%;
 }
 .people-table .people-actions-column {
-  width: 15%;
+  width: 17%;
 }
 .people-table td:first-child strong,
 .people-table td:first-child small {
@@ -593,6 +593,9 @@ td small {
 .actions {
   display: flex;
   gap: 6px;
+  min-width: 136px;
+  padding: 9px 13px;
+  align-items: center;
 }
 .pill {
   padding: 5px 9px;
@@ -810,6 +813,9 @@ textarea {
   font-size: 0.82rem;
   font-weight: 600;
 }
+.table > .alert {
+  margin: 0 4px 14px;
+}
 .alert.error {
   background: var(--danger-bg);
   color: var(--danger);
@@ -865,8 +871,14 @@ textarea {
 }
 .modal > header {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 15px;
+}
+
+.modal > header h2 {
+  margin: 0;
+  align-items: center;
 }
 
 /* ---------- Calendar ---------- */
@@ -1003,6 +1015,12 @@ textarea {
   color: var(--muted);
   flex: 1;
 }
+.holiday-remove {
+  flex: 0 0 40px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
 .holiday-pill {
   background: var(--danger-bg);
   color: var(--danger);
@@ -1137,8 +1155,18 @@ textarea {
 .tests b {
   color: var(--g);
 }
-.danger {
+.danger:not(.icon):not(.link) {
+  min-height: 44px;
+  padding: 0 15px;
+  border: 1px solid color-mix(in srgb, var(--danger) 45%, var(--b));
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--danger) 10%, var(--s));
   color: var(--danger);
+  font-weight: 700;
+}
+.danger:not(.icon):not(.link):hover {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 18%, var(--s));
 }
 
 /* ---------- Login ---------- */
@@ -1317,6 +1345,52 @@ textarea {
 
 /* ---------- Responsive ---------- */
 @media (max-width: 1100px) {
+  .shell {
+    display: block;
+  }
+  aside {
+    transform: translateX(-100%);
+    z-index: 30;
+  }
+  aside.open {
+    transform: none;
+  }
+  .brand button,
+  .menu {
+    display: grid;
+  }
+  .work {
+    grid-column: auto;
+  }
+  .product,
+  .profile div {
+    display: none;
+  }
+  main {
+    padding: 24px;
+  }
+  .collapsed {
+    grid-template-columns: 1fr;
+  }
+  .collapsed aside {
+    width: 264px;
+  }
+  .collapsed nav span,
+  .collapsed .collapse span {
+    display: inline;
+  }
+  .collapsed nav a,
+  .collapsed .collapse {
+    justify-content: flex-start;
+  }
+  .collapsed .brand img {
+    width: 198px;
+    height: auto;
+    object-fit: contain;
+  }
+  .collapsed .collapse svg {
+    transform: none;
+  }
   .group-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -1337,27 +1411,6 @@ textarea {
   }
 }
 @media (max-width: 800px) {
-  .shell {
-    display: block;
-  }
-  aside {
-    transform: translateX(-100%);
-    z-index: 30;
-  }
-  .open {
-    transform: none;
-  }
-  .brand button,
-  .menu {
-    display: grid;
-  }
-  .work {
-    grid-column: auto;
-  }
-  .product,
-  .profile div {
-    display: none;
-  }
   main {
     padding: 18px;
   }
@@ -1432,6 +1485,10 @@ textarea {
   }
   .table td.actions {
     justify-content: flex-end;
+    min-width: 0;
+    padding: 10px 0;
+    gap: 8px;
+    flex-wrap: wrap;
   }
 }
 @media (max-width: 580px) {

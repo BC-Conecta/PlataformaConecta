@@ -28,6 +28,7 @@ function getErrorMessage(reason: unknown, fallback: string): string {
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useAuth();
+  const userId = user?.id;
   const [people, setPeople] = useState<Person[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [fixed, setFixed] = useState<Fixed[]>([]);
@@ -42,9 +43,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const lessonsReady = useRef(false);
   const attendanceReady = useRef(false);
   const holidaysReady = useRef(false);
+  const lessonsSync = useRef<Promise<void> | null>(null);
 
   useEffect(() => {
-    if (authLoading || !user) {
+    if (authLoading || !userId) {
       setLoading(false);
       return;
     }
@@ -75,7 +77,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (active) setLoading(false);
       });
     return () => { active = false; };
-  }, [authLoading, user]);
+  }, [authLoading, userId]);
 
   useEffect(() => {
     if (authLoading || !user || loading || error) return;
@@ -110,7 +112,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       lessonsReady.current = true;
       return;
     }
-    void syncLessons(lessons).catch((reason: unknown) => setError(getErrorMessage(reason, "Não foi possível salvar as aulas.")));
+    const pending = syncLessons(lessons);
+    lessonsSync.current = pending;
+    void pending.catch((reason: unknown) => setError(getErrorMessage(reason, "Não foi possível salvar as aulas.")));
   }, [authLoading, user, loading, error, lessons]);
 
   useEffect(() => {
@@ -119,7 +123,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       attendanceReady.current = true;
       return;
     }
-    void syncAttendance(attendance).catch((reason: unknown) => setError(getErrorMessage(reason, "Não foi possível salvar a frequência.")));
+    void (async () => {
+      try {
+        await lessonsSync.current;
+        await syncAttendance(attendance);
+      } catch (reason) {
+        setError(getErrorMessage(reason, "Não foi possível salvar a frequência."));
+      }
+    })();
   }, [authLoading, user, loading, error, attendance]);
 
   useEffect(() => {
